@@ -1,65 +1,82 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
+import type { ColorSchemeName, TextStyle } from 'react-native';
 
-import '@/global.css';
+export const Spacing = {
+  xs: 4,
+  sm: 8,
+  md: 16,
+  lg: 24,
+} as const;
 
-import { Platform } from 'react-native';
+export const Radius = {
+  sm: 8,
+  md: 12,
+  lg: 16,
+  full: 9999,
+} as const;
+
+export const TouchTarget = {
+  min: 44,
+} as const;
+
+export const FontWeight = {
+  regular: '400',
+  medium: '500',
+  semibold: '600',
+  bold: '700',
+} as const satisfies Record<string, TextStyle['fontWeight']>;
+
+type TextRole = {
+  fontSize: number;
+  lineHeight: number;
+  fontWeight: TextStyle['fontWeight'];
+};
+
+export const Typography = {
+  largeTitle: { fontSize: 34, lineHeight: 41, fontWeight: FontWeight.regular },
+  title1: { fontSize: 28, lineHeight: 34, fontWeight: FontWeight.regular },
+  title2: { fontSize: 22, lineHeight: 28, fontWeight: FontWeight.regular },
+  title3: { fontSize: 20, lineHeight: 25, fontWeight: FontWeight.regular },
+  headline: { fontSize: 17, lineHeight: 22, fontWeight: FontWeight.semibold },
+  body: { fontSize: 17, lineHeight: 22, fontWeight: FontWeight.regular },
+  callout: { fontSize: 16, lineHeight: 21, fontWeight: FontWeight.regular },
+  subheadline: { fontSize: 15, lineHeight: 20, fontWeight: FontWeight.regular },
+  footnote: { fontSize: 13, lineHeight: 18, fontWeight: FontWeight.regular },
+  caption1: { fontSize: 12, lineHeight: 16, fontWeight: FontWeight.regular },
+  caption2: { fontSize: 11, lineHeight: 13, fontWeight: FontWeight.regular },
+} as const satisfies Record<string, TextRole>;
+
+export type TypographyVariant = keyof typeof Typography;
 
 export const Colors = {
   light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
+    background: '#FFFFFF',
+    groupedBackground: '#F2F2F7',
+    secondaryGroupedBackground: '#FFFFFF',
+    label: '#000000',
+    secondaryLabel: 'rgba(60,60,67,0.6)',
+    tertiaryLabel: 'rgba(60,60,67,0.3)',
+    separator: 'rgba(60,60,67,0.29)',
+    tint: '#007AFF',
+    destructive: '#FF3B30',
+    onTint: '#FFFFFF',
   },
   dark: {
-    text: '#ffffff',
     background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
+    groupedBackground: '#000000',
+    secondaryGroupedBackground: '#1C1C1E',
+    label: '#FFFFFF',
+    secondaryLabel: 'rgba(235,235,245,0.6)',
+    tertiaryLabel: 'rgba(235,235,245,0.3)',
+    separator: 'rgba(84,84,88,0.65)',
+    tint: '#0A84FF',
+    destructive: '#FF453A',
+    onTint: '#FFFFFF',
   },
 } as const;
 
-export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
+export type ColorScheme = keyof typeof Colors;
+export type ColorName = keyof typeof Colors.light;
 
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
-  },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
-  },
-  web: {
-    sans: 'var(--font-display)',
-    serif: 'var(--font-serif)',
-    rounded: 'var(--font-rounded)',
-    mono: 'var(--font-mono)',
-  },
-});
-
-export const Spacing = {
-  half: 2,
-  one: 4,
-  two: 8,
-  three: 16,
-  four: 24,
-  five: 32,
-  six: 64,
-} as const;
-
-export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
-export const MaxContentWidth = 800;
+export function resolveScheme(scheme: ColorSchemeName): ColorScheme {
+  return scheme === 'dark' ? 'dark' : 'light';
+}

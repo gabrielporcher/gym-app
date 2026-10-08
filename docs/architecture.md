@@ -104,6 +104,21 @@ menos séries versus mais séries com menos carga.
 - Pesos em kg.
 - Sync futuro (change `cloud-sync`): fila local de alterações pendentes, resolução de conflito
   last-write-wins por `updated_at`, autenticação via Supabase Auth, RLS por `owner_id`.
+- A abertura aplica as migrations locais antes das seções. O journal começa sem SQL e sem
+  tabela de domínio. A primeira tabela de domínio entra numa change posterior, com UUID,
+  `owner_id`, `created_at`, `updated_at` e `deleted_at`, no mesmo cliente.
+
+## Interface
+
+- Tab bar e header nativos, sem fundo opaco forçado, para o material do sistema aparecer.
+  `Card` usa o material translúcido só quando a API está disponível; senão, superfície opaca
+  com os tokens semânticos. Fonte do sistema, sem embarcar SF Pro. No Android a barra é a
+  nativa da plataforma.
+- Espaçamento `xs`/`sm`/`md`/`lg` (4/8/16/24). Tipografia com os nomes dos estilos do HIG,
+  no tamanho Large padrão, com `allowFontScaling` do sistema.
+- A barra tem três seções: Início, Treinos e Dashboard. O catálogo de exercícios não é seção
+  raiz. A lista completa entra na criação do plano e, depois, na troca de um exercício durante
+  a sessão. No registro da sessão, a lista é só a dos exercícios alocados naquele treino.
 
 ## Roadmap de changes
 
@@ -137,3 +152,7 @@ Resolver nas specs da change correspondente:
 | 2026-10-07 | `StyleSheet` + tokens, sem lib de estilo | Simplicidade, sem dependência extra |
 | 2026-10-07 | Recrutamento em escala 1–5 | 1–10 é precisão falsa e encarece a curadoria do catálogo |
 | 2026-10-07 | Testes unitários obrigatórios em `src/domain/` | Cenários das specs viram testes diretamente |
+| 2026-10-08 | Tab bar e header nativos, sem fundo opaco forçado; `Card` translúcido só com a API disponível, senão superfície opaca; fonte do sistema | O material do sistema aparece quando o aparelho oferece; Android usa a barra nativa da plataforma |
+| 2026-10-08 | Espaçamento `xs`/`sm`/`md`/`lg` (4/8/16/24) e tipografia com os nomes do HIG, tamanho Large, `allowFontScaling` do sistema | Escala única para as próximas telas, sem embarcar SF Pro |
+| 2026-10-08 | Abertura aplica as migrations locais antes das seções; journal sem SQL e sem tabela de domínio | A primeira tabela de domínio vem depois, com UUID e colunas de sync, no mesmo cliente |
+| 2026-10-08 | Três seções: Início, Treinos e Dashboard; catálogo de exercícios não é seção raiz | A lista completa entra na criação do plano e na troca de exercício na sessão; no registro, só os exercícios daquele treino |
