@@ -1,0 +1,39 @@
+schema: spec-driven
+
+context: |
+  App mobile pessoal de registro de treinos de academia. Usuário único gerencia os próprios
+  planos e sessões. Offline-first: tudo funciona sem rede; sync com backend é uma change futura.
+  Decisões de dados não podem bloquear o sync futuro nem um futuro papel de admin/coach que
+  atribui planos a usuários.
+  Escreva todos os artefatos em pt-BR. Identificadores de código, nomes de arquivos e de
+  capabilities em inglês (kebab-case).
+  Use os termos do glossário em docs/architecture.md (Plano de treino, Modelo de divisão,
+  Dia de treino, Sessão, Série, Exercício, Recrutamento) de forma consistente.
+
+rules:
+  proposal:
+    - Sempre incluir uma seção "Fora de escopo" explícita
+    - Incluir uma seção "Depois" listando ideias futuras relacionadas que não entram nesta change
+    - Manter a change pequena o bastante para ser implementada e revisada isoladamente
+  specs:
+    - Descrever apenas comportamento observável; não citar bibliotecas, tabelas, componentes ou arquivos
+    - Todo requisito tem pelo menos um cenário WHEN/THEN, incluindo casos de borda (vazio, dado ausente, ação cancelada)
+    - Regras de cálculo (séries por músculo, evolução de carga, sugestão de treino) devem ter cenários com valores numéricos concretos
+  design:
+    - Seguir a arquitetura e as regras de camadas de docs/architecture.md e AGENTS.md; justificar qualquer desvio
+    - Para mudanças de schema, descrever entidades, relações e o impacto no sync futuro
+    - Terminar com uma seção "Decisões duráveis" listando o que deve ser promovido para docs/architecture.md (ou "Nenhuma")
+  tasks:
+    - Cada task deve ser verificável isoladamente e caber em poucas horas
+    - Lógica em src/domain/ sempre acompanhada de task de testes unitários
+    - Último grupo de tasks sempre inclui rodar lint, typecheck e testes
+    - Se o design listou decisões duráveis, incluir task para atualizar docs/architecture.md
+
+operations:
+  apply:
+    guidance:
+      - Implementar as tasks na ordem; marcar cada uma como concluída assim que terminar
+      - Se a implementação revelar que uma spec ou o design está errado, parar e propor atualizar o artefato antes de seguir
+  archive:
+    guidance:
+      - Antes de arquivar, confirmar que as decisões duráveis do design já estão em docs/architecture.md
