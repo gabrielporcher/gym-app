@@ -80,3 +80,109 @@ export const exerciseMuscles = sqliteTable(
       .where(sql`${table.deletedAt} is null`),
   ],
 );
+
+export const localOwner = sqliteTable('local_owner', {
+  id: text('id').primaryKey(),
+  ownerId: text('owner_id').notNull(),
+  createdAt: text('created_at').notNull(),
+});
+
+export const workoutPlans = sqliteTable(
+  'workout_plans',
+  {
+    id: text('id').primaryKey(),
+    ownerId: text('owner_id').notNull(),
+    name: text('name').notNull(),
+    templateId: text('template_id').notNull(),
+    status: text('status', { enum: ['active', 'archived'] }).notNull(),
+    createdAt: text('created_at').notNull(),
+    updatedAt: text('updated_at').notNull(),
+    deletedAt: text('deleted_at'),
+  },
+  (table) => [
+    check('workout_plans_status', sql`${table.status} in ('active', 'archived')`),
+    uniqueIndex('workout_plans_one_active_per_owner')
+      .on(table.ownerId)
+      .where(sql`${table.status} = 'active' and ${table.deletedAt} is null`),
+  ],
+);
+
+export const workoutDays = sqliteTable(
+  'workout_days',
+  {
+    id: text('id').primaryKey(),
+    planId: text('plan_id')
+      .notNull()
+      .references(() => workoutPlans.id, { onDelete: 'restrict' }),
+    ownerId: text('owner_id').notNull(),
+    name: text('name').notNull(),
+    weekday: integer('weekday').notNull(),
+    emphasis: text('emphasis', { enum: ['groups', 'full-body'] }).notNull(),
+    createdAt: text('created_at').notNull(),
+    updatedAt: text('updated_at').notNull(),
+    deletedAt: text('deleted_at'),
+  },
+  (table) => [
+    check('workout_days_weekday', sql`${table.weekday} between 1 and 7`),
+    check('workout_days_emphasis', sql`${table.emphasis} in ('groups', 'full-body')`),
+    uniqueIndex('workout_days_active_weekday')
+      .on(table.planId, table.weekday)
+      .where(sql`${table.deletedAt} is null`),
+  ],
+);
+
+export const workoutDayMuscles = sqliteTable(
+  'workout_day_muscles',
+  {
+    id: text('id').primaryKey(),
+    workoutDayId: text('workout_day_id')
+      .notNull()
+      .references(() => workoutDays.id, { onDelete: 'restrict' }),
+    ownerId: text('owner_id').notNull(),
+    muscleGroupId: text('muscle_group_id')
+      .notNull()
+      .references(() => muscleGroups.id, { onDelete: 'restrict' }),
+    sortOrder: integer('sort_order').notNull(),
+    createdAt: text('created_at').notNull(),
+    updatedAt: text('updated_at').notNull(),
+    deletedAt: text('deleted_at'),
+  },
+  (table) => [
+    uniqueIndex('workout_day_muscles_active_group')
+      .on(table.workoutDayId, table.muscleGroupId)
+      .where(sql`${table.deletedAt} is null`),
+  ],
+);
+
+export const plannedExercises = sqliteTable(
+  'planned_exercises',
+  {
+    id: text('id').primaryKey(),
+    workoutDayId: text('workout_day_id')
+      .notNull()
+      .references(() => workoutDays.id, { onDelete: 'restrict' }),
+    ownerId: text('owner_id').notNull(),
+    exerciseId: text('exercise_id')
+      .notNull()
+      .references(() => exercises.id, { onDelete: 'restrict' }),
+    sortOrder: integer('sort_order').notNull(),
+    targetSets: integer('target_sets'),
+    targetRepMin: integer('target_rep_min'),
+    targetRepMax: integer('target_rep_max'),
+    createdAt: text('created_at').notNull(),
+    updatedAt: text('updated_at').notNull(),
+    deletedAt: text('deleted_at'),
+  },
+  (table) => [
+    check('planned_exercises_target_sets', sql`${table.targetSets} is null or ${table.targetSets} >= 1`),
+    check('planned_exercises_target_rep_min', sql`${table.targetRepMin} is null or ${table.targetRepMin} >= 1`),
+    check('planned_exercises_target_rep_max', sql`${table.targetRepMax} is null or ${table.targetRepMax} >= 1`),
+    check(
+      'planned_exercises_rep_range',
+      sql`${table.targetRepMin} is null or ${table.targetRepMax} is null or ${table.targetRepMax} >= ${table.targetRepMin}`,
+    ),
+    uniqueIndex('planned_exercises_active_exercise')
+      .on(table.workoutDayId, table.exerciseId)
+      .where(sql`${table.deletedAt} is null`),
+  ],
+);

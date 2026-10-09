@@ -51,9 +51,10 @@ Regras de dependência entre camadas: ver `AGENTS.md`.
 
 | Termo (pt-BR) | Nome no código | Definição |
 |---|---|---|
-| Modelo de divisão | `SplitTemplate` | Estrutura de divisão semanal: ABCDE, ABC 2x, Push Pull Legs, Upper Lower, Full Body. Define quantos dias distintos existem e a frequência semanal. |
+| Modelo de divisão | `SplitTemplate` | Uma das nove divisões fechadas: Corpo inteiro, Superiores e inferiores, Push Pull Legs, Push Pull Legs 2x, ABC, ABC 2x, ABCD, ABCDE e Personalizado. Programa nomeado (Arnold, PHUL, PHAT, PPLUL, bro split) não é modelo. Bro split é a ênfase inicial do ABCDE. |
 | Plano de treino | `WorkoutPlan` | Plano do usuário baseado em um modelo de divisão. Apenas um ativo por vez; os anteriores ficam arquivados. |
-| Dia de treino | `WorkoutDay` | Um dia distinto do plano (Treino A, Treino B, Push...). |
+| Dia de treino | `WorkoutDay` | Um dia do plano, com weekday (segunda = 1 … domingo = 7). No máximo um por dia da semana. Descanso é a ausência de dia. Dias repetidos do modelo são registros independentes. |
+| Ênfase do dia | `DayEmphasis` | Sugestão de grupos (agonista 4 ou 5) ou modo corpo inteiro. Não restringe o catálogo. |
 | Exercício planejado | `PlannedExercise` | Exercício alocado a um dia de treino, com ordem e meta (séries, faixa de reps). |
 | Sessão | `Session` | Execução real de um treino em uma data. Pode seguir um dia de treino ou divergir dele. |
 | Exercício executado | `SessionExercise` | Exercício realizado dentro de uma sessão. |
@@ -126,6 +127,7 @@ Equipamento (Barra, Barra W, Halteres, Máquina, Cabo, Peso corporal, Smith, Bar
 ## Estratégia de dados
 
 - IDs UUID gerados no cliente.
+- Identidade local: uma linha `local_owner`, com id fixo `local` e `owner_id` UUID gerado no aparelho na primeira gravação de plano. Não tem `deleted_at` e não entra no sync, até a conta existir. As tabelas do plano usam esse `owner_id`.
 - Tabelas de dado do usuário têm `owner_id`, `created_at`, `updated_at` e `deleted_at` (soft delete).
 - Grupos, músculos, nomes alternativos e recrutamentos da base não têm `owner_id`: são dado de referência e não sincronizam por usuário. `exercises.owner_id` existe e fica nulo na base.
 - Sessões guardam o que foi realmente executado e não dependem do estado atual do plano.
@@ -163,7 +165,7 @@ Depois: insights baseados em regras, papel de admin/coach, RPE/RIR, unidades em 
 
 Resolver nas specs da change correspondente:
 
-- Sugestão do próximo treino: por sequência (com reinício semanal) ou por calendário? (`session-logging`)
+- Sugestão do próximo treino: por sequência (com reinício semanal) ou por calendário? O weekday fica gravado no dia; a regra da sugestão continua em aberto. (`session-logging`)
 - Convenção de qual kg registrar por tipo de carga: barra, halter, máquina, peso corporal, cabo. (`session-logging`)
 - Recrutamento calculado na hora ou copiado para a sessão? (`training-dashboard`)
 - Os totais do período separam séries como agonista e como sinergista? (`training-dashboard`)
@@ -184,3 +186,4 @@ Resolver nas specs da change correspondente:
 | 2026-10-08 | Abertura aplica as migrations locais antes das seções; journal sem SQL e sem tabela de domínio | A primeira tabela de domínio vem depois, com UUID e colunas de sync, no mesmo cliente |
 | 2026-10-08 | Três seções: Início, Treinos e Dashboard; catálogo de exercícios não é seção raiz | A lista completa entra na criação do plano e na troca de exercício na sessão; no registro, só os exercícios daquele treino |
 | 2026-10-09 | Catálogo da base é dado de referência: doze grupos, recrutamento 5/4/1–3 com filtro de grupo em 4 ou 5, UUID fixo e `owner_id` nulo, equipamento separado do tipo de carga | A consulta e o dashboard futuro usam o mesmo recorte; correção entra em migration nova e a base não sobe no sync |
+| 2026-10-09 | Nove modelos de divisão; programa nomeado não é modelo; `WorkoutDay` guarda weekday 1–7 com no máximo um treino por dia; dias repetidos são independentes; ênfase é sugestão; `local_owner` fica fora do sync | A semana visível e o sync futuro usam o mesmo plano, sem card para Arnold, PHUL, PHAT ou PPLUL |

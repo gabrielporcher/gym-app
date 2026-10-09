@@ -15,6 +15,13 @@
       "when": 1791550607202,
       "tag": "0001_seed_exercise_catalog",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1791567482283,
+      "tag": "0002_workout_plans",
+      "breakpoints": true
     }
   ]
 }

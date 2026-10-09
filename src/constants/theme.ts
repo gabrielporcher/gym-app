@@ -1,5 +1,7 @@
 import type { ColorSchemeName, TextStyle } from 'react-native';
 
+import type { MuscleGroupName } from '@/domain/exercise-catalog';
+
 export const Spacing = {
   xs: 4,
   sm: 8,
@@ -76,6 +78,21 @@ export const Colors = {
 
 export type ColorScheme = keyof typeof Colors;
 export type ColorName = keyof typeof Colors.light;
+
+export const MuscleGroupColors = {
+  Peito: { light: '#D92D20', dark: '#FF7A70' },
+  Costas: { light: '#175CD3', dark: '#84ADFF' },
+  Ombros: { light: '#DC6803', dark: '#FDB022' },
+  Bíceps: { light: '#088AB2', dark: '#22CCEE' },
+  Tríceps: { light: '#6941C6', dark: '#B692F6' },
+  Antebraço: { light: '#667085', dark: '#98A2B3' },
+  Quadríceps: { light: '#079455', dark: '#47CD89' },
+  'Posterior de coxa': { light: '#0E9384', dark: '#2ED3B7' },
+  Glúteos: { light: '#DD2590', dark: '#F670C7' },
+  Adutores: { light: '#444CE7', dark: '#A4BCFD' },
+  Panturrilhas: { light: '#669F2A', dark: '#ACDC79' },
+  Abdômen: { light: '#CA8504', dark: '#FDE272' },
+} as const satisfies Record<MuscleGroupName, { readonly light: string; readonly dark: string }>;
 
 export function resolveScheme(scheme: ColorSchemeName): ColorScheme {
   return scheme === 'dark' ? 'dark' : 'light';
