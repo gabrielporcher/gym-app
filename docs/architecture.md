@@ -59,8 +59,8 @@ Regras de dependência entre camadas: ver `AGENTS.md`.
 | Exercício executado | `SessionExercise` | Exercício realizado dentro de uma sessão. |
 | Série | `Set` | Uma série executada: repetições e carga em kg. Pode ser marcada como aquecimento. |
 | Exercício | `Exercise` | Item do catálogo (base embutida ou criado pelo usuário). |
-| Músculo / Grupo muscular | `Muscle` / `MuscleGroup` | Taxonomia em dois níveis (ex.: deltoide lateral -> ombros). |
-| Recrutamento | `ExerciseMuscle` | Nível de 1 a 5 de quanto um exercício recruta um músculo. Distingue músculos agonistas (recrutamento alto) de sinergistas (recrutamento menor). |
+| Músculo / Grupo muscular | `Muscle` / `MuscleGroup` | Taxonomia em dois níveis. O músculo pertence a um grupo; o filtro da consulta usa o grupo. |
+| Recrutamento | `ExerciseMuscle` | Nota de 1 a 5 de quanto um exercício recruta um músculo. 5 é agonista principal, 4 é agonista secundário e 1 a 3 é sinergista. Músculo ausente não é nota zero. |
 | Série válida | `validSet` | Série executada que não é aquecimento. É a unidade de contagem das métricas. |
 
 ## Modelo de métricas
@@ -96,17 +96,45 @@ menos séries versus mais séries com menos carga.
 
 - Séries de aquecimento não entram nas métricas.
 
+## Catálogo de exercícios
+
+O catálogo da base é dado de referência, não dado do usuário. Grupo, músculo e exercício nascem com UUID fixo, o mesmo em todo aparelho. `exercises.owner_id` nulo marca a base, e essa linha não entra no sync. Correção de nome, nome alternativo ou recrutamento entra numa migration nova e mantém a identidade. Exercício criado pelo usuário, numa change futura, usa a mesma tabela com `owner_id`.
+
+A taxonomia tem dois níveis. O filtro usa o grupo; o recrutamento é por músculo.
+
+| Grupo | Músculos |
+|---|---|
+| Peito | Peitoral superior, Peitoral médio-inferior |
+| Costas | Latíssimo do dorso, Romboides, Trapézio superior, Trapézio médio, Trapézio inferior, Eretor da espinha |
+| Ombros | Deltoide anterior, Deltoide lateral, Deltoide posterior |
+| Bíceps | Bíceps braquial, Braquial |
+| Tríceps | Tríceps cabeça longa, Tríceps cabeça lateral, Tríceps cabeça medial |
+| Antebraço | Braquiorradial, Flexores do punho, Extensores do punho |
+| Quadríceps | Reto femoral, Vastos do quadríceps |
+| Posterior de coxa | Bíceps femoral, Semitendíneo e semimembranoso |
+| Glúteos | Glúteo máximo, Glúteo médio |
+| Adutores | Adutores |
+| Panturrilhas | Gastrocnêmio, Sóleo |
+| Abdômen | Reto abdominal, Oblíquos |
+
+Peitoral médio e peitoral inferior são um músculo só. Vasto lateral, medial e intermédio são "Vastos do quadríceps". Semitendíneo e semimembranoso são um músculo. Redondo maior não é músculo próprio. Lombar não é grupo: eretor da espinha fica em Costas. Bíceps e tríceps são grupos próprios.
+
+O filtro por grupo inclui o exercício quando algum músculo daquele grupo está em 4 ou 5. A separação dos totais do período entre agonista e sinergista continua em `training-dashboard`.
+
+Equipamento (Barra, Barra W, Halteres, Máquina, Cabo, Peso corporal, Smith, Barra hexagonal) é o filtro. Tipo de carga (barra, halter, máquina, peso corporal, cabo) fica guardado para `session-logging`. Barra W, Smith e barra hexagonal usam carga barra. A convenção de qual kg registrar continua em aberto.
+
 ## Estratégia de dados
 
 - IDs UUID gerados no cliente.
-- Toda tabela sincronizável tem `owner_id`, `created_at`, `updated_at`, `deleted_at` (soft delete).
+- Tabelas de dado do usuário têm `owner_id`, `created_at`, `updated_at` e `deleted_at` (soft delete).
+- Grupos, músculos, nomes alternativos e recrutamentos da base não têm `owner_id`: são dado de referência e não sincronizam por usuário. `exercises.owner_id` existe e fica nulo na base.
 - Sessões guardam o que foi realmente executado e não dependem do estado atual do plano.
 - Pesos em kg.
 - Sync futuro (change `cloud-sync`): fila local de alterações pendentes, resolução de conflito
-  last-write-wins por `updated_at`, autenticação via Supabase Auth, RLS por `owner_id`.
-- A abertura aplica as migrations locais antes das seções. O journal começa sem SQL e sem
-  tabela de domínio. A primeira tabela de domínio entra numa change posterior, com UUID,
-  `owner_id`, `created_at`, `updated_at` e `deleted_at`, no mesmo cliente.
+  last-write-wins por `updated_at`, autenticação via Supabase Auth, RLS por `owner_id`. Linha de
+  exercício com `owner_id` nulo não sobe.
+- A abertura aplica as migrations locais antes das seções. O catálogo da base entra nessas
+  migrations, com UUID fixo, e não é semeado de novo na abertura.
 
 ## Interface
 
@@ -136,10 +164,9 @@ Depois: insights baseados em regras, papel de admin/coach, RPE/RIR, unidades em 
 Resolver nas specs da change correspondente:
 
 - Sugestão do próximo treino: por sequência (com reinício semanal) ou por calendário? (`session-logging`)
-- Convenção de "peso total" por tipo de carga: barra, halter, máquina, peso corporal. (`exercise-catalog` / `session-logging`)
-- Lista de músculos e grupos musculares. (`exercise-catalog`)
+- Convenção de qual kg registrar por tipo de carga: barra, halter, máquina, peso corporal, cabo. (`session-logging`)
 - Recrutamento calculado na hora ou copiado para a sessão? (`training-dashboard`)
-- A partir de qual nível o músculo é agonista e abaixo de qual é sinergista? Os totais do período separam séries como agonista e como sinergista? (`exercise-catalog` / `training-dashboard`)
+- Os totais do período separam séries como agonista e como sinergista? (`training-dashboard`)
 
 ## Registro de decisões
 
@@ -156,3 +183,4 @@ Resolver nas specs da change correspondente:
 | 2026-10-08 | Espaçamento `xs`/`sm`/`md`/`lg` (4/8/16/24) e tipografia com os nomes do HIG, tamanho Large, `allowFontScaling` do sistema | Escala única para as próximas telas, sem embarcar SF Pro |
 | 2026-10-08 | Abertura aplica as migrations locais antes das seções; journal sem SQL e sem tabela de domínio | A primeira tabela de domínio vem depois, com UUID e colunas de sync, no mesmo cliente |
 | 2026-10-08 | Três seções: Início, Treinos e Dashboard; catálogo de exercícios não é seção raiz | A lista completa entra na criação do plano e na troca de exercício na sessão; no registro, só os exercícios daquele treino |
+| 2026-10-09 | Catálogo da base é dado de referência: doze grupos, recrutamento 5/4/1–3 com filtro de grupo em 4 ou 5, UUID fixo e `owner_id` nulo, equipamento separado do tipo de carga | A consulta e o dashboard futuro usam o mesmo recorte; correção entra em migration nova e a base não sobe no sync |
