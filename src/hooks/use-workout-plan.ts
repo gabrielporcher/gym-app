@@ -8,7 +8,6 @@ import {
   freeWeekdays,
   listExercisesForDay,
   SPLIT_TEMPLATES,
-  type EmphasisChange,
   type ExerciseSelectorList,
   type ExerciseTarget,
   type SplitTemplateId,
@@ -17,8 +16,7 @@ import {
 import { listExercises, listMuscleGroups } from '@/repositories/exercise-catalog';
 import {
   addDayToPlan,
-  allocateExerciseOnDay,
-  changeDayEmphasis,
+  allocateExercisesOnDay,
   createWorkoutPlan,
   deleteWorkoutPlan,
   getWorkoutDay,
@@ -157,8 +155,6 @@ export function useWorkoutPlan(planId: string | null) {
     removeDay: (dayId: string) => run(() => (planId ? removeDayFromPlan(planId, dayId) : Promise.resolve())),
     moveDay: (dayId: string, weekday: Weekday) =>
       run(() => (planId ? moveDayInPlan(planId, dayId, weekday) : Promise.resolve())),
-    changeEmphasis: (dayId: string, change: EmphasisChange) =>
-      run(() => (planId ? changeDayEmphasis(planId, dayId, change) : Promise.resolve())),
   };
 }
 
@@ -206,7 +202,9 @@ export function useWorkoutDay(planId: string | null, dayId: string | null) {
       return null;
     }
 
-    return listExercisesForDay(catalog, { text, muscleGroup }, day.emphasis);
+    const allocated = new Set(day.exercises.map((exercise) => exercise.exerciseId));
+    const available = catalog.filter((exercise) => !allocated.has(exercise.id));
+    return listExercisesForDay(available, { text, muscleGroup }, day.emphasis);
   }, [catalog, day, muscleGroup, text]);
 
   async function run(work: () => Promise<unknown>) {
@@ -222,8 +220,12 @@ export function useWorkoutDay(planId: string | null, dayId: string | null) {
     selector,
     setText,
     setMuscleGroup,
-    allocate: (exerciseId: string) =>
-      run(() => (planId && dayId ? allocateExerciseOnDay(planId, dayId, exerciseId) : Promise.resolve())),
+    allocateMany: (exerciseIds: readonly string[]) =>
+      run(() =>
+        planId && dayId && exerciseIds.length > 0
+          ? allocateExercisesOnDay(planId, dayId, exerciseIds)
+          : Promise.resolve(),
+      ),
     reorder: (plannedExerciseId: string, direction: 'up' | 'down') =>
       run(() =>
         planId && dayId ? reorderPlannedExercise(planId, dayId, plannedExerciseId, direction) : Promise.resolve(),

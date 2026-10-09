@@ -1,10 +1,10 @@
-# Spec Delta
+# workout-plans Specification
 
 ## Purpose
 
-Permite que o usuário crie o próprio plano de treino a partir de um modelo de divisão, distribua os dias na semana e aloque exercícios com uma ênfase muscular visível.
+Permite que o usuário crie o próprio plano de treino a partir de um modelo de divisão, distribua os dias na semana e aloque exercícios. As tags do card saem dos exercícios alocados. Cada exercício tem meta opcional de séries, repetições e peso.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Nove modelos de divisão
 A escolha de um plano MUST oferecer exatamente estes modelos, nesta ordem: Corpo inteiro, Superiores e inferiores, Push Pull Legs, Push Pull Legs 2x, ABC, ABC 2x, ABCD, ABCDE e Personalizado. Cada um MUST mostrar o próprio nome e a frase de ajuda abaixo.
@@ -31,66 +31,66 @@ A escolha de um plano MUST oferecer exatamente estes modelos, nesta ordem: Corpo
 - **THEN** nenhum plano é gravado
 
 ### Requirement: Plano nasce do modelo
-Confirmar um modelo sem outro plano ativo MUST gravar um plano ativo com o nome do modelo, os dias abaixo e a semana de segunda a domingo. Dia sem treino MUST aparecer como "Descanso" e MUST NOT ter exercício.
+Confirmar um modelo sem outro plano ativo MUST gravar um plano ativo com o nome do modelo, os dias abaixo e a semana de segunda a domingo. Dia sem treino MUST aparecer como "Descanso" e MUST NOT ter exercício. A ênfase de cada dia fica gravada para ordenar o seletor. O card do dia MUST NOT mostrar tag de grupo nem "Corpo inteiro" enquanto aquele dia não tiver exercício alocado.
 
 #### Scenario: Superiores e inferiores
 - **WHEN** o usuário confirma Superiores e inferiores e não havia plano ativo
 - **THEN** o plano ativo se chama "Superiores e inferiores"
-- **AND** segunda é "Superiores 1" com as tags Peito, Costas, Ombros, Bíceps e Tríceps, nessa ordem
-- **AND** terça é "Inferiores 1" com as tags Quadríceps, Posterior de coxa, Glúteos, Adutores e Panturrilhas, nessa ordem
+- **AND** segunda é "Superiores 1", com ênfase sugerida Peito, Costas, Ombros, Bíceps e Tríceps, nessa ordem, e sem tag visível no card
+- **AND** terça é "Inferiores 1", com ênfase sugerida Quadríceps, Posterior de coxa, Glúteos, Adutores e Panturrilhas, nessa ordem, e sem tag visível no card
 - **AND** quarta é Descanso
-- **AND** quinta é "Superiores 2" com as mesmas tags de "Superiores 1"
-- **AND** sexta é "Inferiores 2" com as mesmas tags de "Inferiores 1"
+- **AND** quinta é "Superiores 2" com a mesma ênfase sugerida de "Superiores 1" e sem tag visível no card
+- **AND** sexta é "Inferiores 2" com a mesma ênfase sugerida de "Inferiores 1" e sem tag visível no card
 - **AND** sábado e domingo são Descanso
 
 #### Scenario: Corpo inteiro em três dias
 - **WHEN** o usuário confirma Corpo inteiro e não havia plano ativo
 - **THEN** o plano ativo se chama "Corpo inteiro"
 - **AND** segunda é "Corpo inteiro 1", quarta é "Corpo inteiro 2" e sexta é "Corpo inteiro 3"
-- **AND** cada um desses dias mostra a tag "Corpo inteiro" e não mostra os doze grupos
+- **AND** cada um desses dias não mostra tag no card, e a ênfase do seletor é corpo inteiro
 - **AND** terça, quinta, sábado e domingo são Descanso
 
 #### Scenario: Push Pull Legs em três dias
 - **WHEN** o usuário confirma Push Pull Legs e não havia plano ativo
-- **THEN** segunda é "Push" com Peito, Ombros e Tríceps
-- **AND** quarta é "Pull" com Costas, Bíceps e Antebraço, sem Ombros
-- **AND** sexta é "Pernas" com Quadríceps, Posterior de coxa, Glúteos, Adutores e Panturrilhas
+- **THEN** segunda é "Push", com ênfase sugerida Peito, Ombros e Tríceps, e sem tag visível no card
+- **AND** quarta é "Pull", com ênfase sugerida Costas, Bíceps e Antebraço, sem Ombros, e sem tag visível no card
+- **AND** sexta é "Pernas", com ênfase sugerida Quadríceps, Posterior de coxa, Glúteos, Adutores e Panturrilhas, e sem tag visível no card
 - **AND** terça, quinta, sábado e domingo são Descanso
 
 #### Scenario: Push Pull Legs 2x
 - **WHEN** o usuário confirma Push Pull Legs 2x e não havia plano ativo
 - **THEN** segunda é "Push", terça é "Pull", quarta é "Pernas", quinta é "Push 2", sexta é "Pull 2" e sábado é "Pernas 2"
 - **AND** domingo é Descanso
-- **AND** "Push 2" começa com as mesmas tags de "Push"
+- **AND** "Push 2" começa com a mesma ênfase sugerida de "Push" e sem tag visível no card
 
 #### Scenario: ABC
 - **WHEN** o usuário confirma ABC e não havia plano ativo
-- **THEN** segunda é "Treino A" com Peito, Ombros e Tríceps
-- **AND** quarta é "Treino B" com Costas e Bíceps
-- **AND** sexta é "Treino C" com Quadríceps, Posterior de coxa, Glúteos, Adutores e Panturrilhas
+- **THEN** segunda é "Treino A", com ênfase sugerida Peito, Ombros e Tríceps, e sem tag visível no card
+- **AND** quarta é "Treino B", com ênfase sugerida Costas e Bíceps, e sem tag visível no card
+- **AND** sexta é "Treino C", com ênfase sugerida Quadríceps, Posterior de coxa, Glúteos, Adutores e Panturrilhas, e sem tag visível no card
 - **AND** terça, quinta, sábado e domingo são Descanso
 
 #### Scenario: ABC 2x
 - **WHEN** o usuário confirma ABC 2x e não havia plano ativo
 - **THEN** segunda é "Treino A1", terça é "Treino B1", quarta é "Treino C1", quinta é "Treino A2", sexta é "Treino B2" e sábado é "Treino C2"
 - **AND** domingo é Descanso
-- **AND** "Treino A1" e "Treino A2" começam com Peito, Ombros e Tríceps
+- **AND** "Treino A1" e "Treino A2" começam com a ênfase sugerida Peito, Ombros e Tríceps, sem tag visível no card
 
 #### Scenario: ABCD
 - **WHEN** o usuário confirma ABCD e não havia plano ativo
-- **THEN** segunda é "Treino A" com Peito e Tríceps
-- **AND** terça é "Treino B" com Costas e Bíceps
-- **AND** quinta é "Treino C" com Quadríceps, Posterior de coxa, Glúteos, Adutores e Panturrilhas
-- **AND** sexta é "Treino D" com Ombros, Bíceps e Tríceps
+- **THEN** segunda é "Treino A", com ênfase sugerida Peito e Tríceps, e sem tag visível no card
+- **AND** terça é "Treino B", com ênfase sugerida Costas e Bíceps, e sem tag visível no card
+- **AND** quinta é "Treino C", com ênfase sugerida Quadríceps, Posterior de coxa, Glúteos, Adutores e Panturrilhas, e sem tag visível no card
+- **AND** sexta é "Treino D", com ênfase sugerida Ombros, Bíceps e Tríceps, e sem tag visível no card
 - **AND** quarta, sábado e domingo são Descanso
 
 #### Scenario: ABCDE
 - **WHEN** o usuário confirma ABCDE e não havia plano ativo
-- **THEN** segunda é "Treino A" com Peito
-- **AND** terça é "Treino B" com Costas
-- **AND** quarta é "Treino C" com Quadríceps, Posterior de coxa, Glúteos, Adutores e Panturrilhas
-- **AND** quinta é "Treino D" com Ombros
-- **AND** sexta é "Treino E" com Bíceps, Tríceps e Antebraço
+- **THEN** segunda é "Treino A", com ênfase sugerida Peito, e sem tag visível no card
+- **AND** terça é "Treino B", com ênfase sugerida Costas, e sem tag visível no card
+- **AND** quarta é "Treino C", com ênfase sugerida Quadríceps, Posterior de coxa, Glúteos, Adutores e Panturrilhas, e sem tag visível no card
+- **AND** quinta é "Treino D", com ênfase sugerida Ombros, e sem tag visível no card
+- **AND** sexta é "Treino E", com ênfase sugerida Bíceps, Tríceps e Antebraço, e sem tag visível no card
 - **AND** sábado e domingo são Descanso
 
 #### Scenario: Personalizado
@@ -107,8 +107,9 @@ Dois dias que nascem com a mesma ênfase MUST ser editáveis sem alterar um ao o
 - **THEN** "Treino A2" não contém Supino reto com barra
 
 #### Scenario: Tag só no primeiro A
-- **WHEN** o plano é ABC 2x e o usuário remove a tag Peito de "Treino A1"
-- **THEN** "Treino A2" continua mostrando Peito
+- **WHEN** o plano é ABC 2x e o usuário confirma em "Treino A1" um exercício com Peito em 4 ou 5
+- **THEN** "Treino A1" mostra a tag Peito
+- **AND** "Treino A2" não mostra Peito
 
 ### Requirement: Um plano ativo
 MUST haver no máximo um plano ativo. Confirmar outro modelo com um plano ativo MUST pedir arquivamento antes de gravar o novo. Cancelar MUST manter o ativo e MUST NOT gravar o novo.
@@ -210,29 +211,31 @@ O usuário MUST poder mover um dia de treino para um dia da semana que está em 
 - **THEN** segunda não é oferecida como destino
 - **AND** cancelar esse movimento deixa "Superiores 2" na quinta
 
-### Requirement: Editar ênfase do dia
-O usuário MUST poder remover uma tag e acrescentar um grupo muscular que ainda não está no dia. "Corpo inteiro" e grupos específicos MUST NOT aparecer juntos: acrescentar um grupo MUST substituir "Corpo inteiro". Remover a última tag MUST ser permitido.
+### Requirement: Ações do card do dia
+O card do dia MUST oferecer mudar o nome, adicionar exercícios, mover e excluir. MUST NOT oferecer acrescentar nem remover grupo muscular.
 
-#### Scenario: Tirar ombros e pôr abdômen
-- **WHEN** "Superiores 1" tem Peito, Costas, Ombros, Bíceps e Tríceps e o usuário remove Ombros e acrescenta Abdômen
-- **THEN** as tags são Peito, Costas, Bíceps, Tríceps e Abdômen
-- **AND** Ombros não aparece
+#### Scenario: Sem acrescentar grupo
+- **WHEN** o usuário abre o plano
+- **THEN** o card não oferece "Adicionar Ombros" nem "Adicionar Quadríceps"
+- **AND** oferece mudar o nome, adicionar exercícios, mover e excluir
 
-#### Scenario: Corpo inteiro vira um grupo
-- **WHEN** o dia mostra "Corpo inteiro" e o usuário acrescenta Peito
-- **THEN** o dia mostra Peito
-- **AND** não mostra "Corpo inteiro"
+### Requirement: Tags visíveis vêm dos exercícios
+A tag visível no card MUST ser calculada pelos exercícios alocados: um grupo entra quando algum exercício do dia o recruta com nota 4 ou 5. Sem exercício alocado, o card MUST NOT mostrar tag de grupo nem "Corpo inteiro". Sinergista (nota 1 a 3) MUST NOT gerar tag. A tag MUST mostrar o nome do grupo e MUST NOT ser removível pelo toque.
 
-#### Scenario: Dia sem tag
-- **WHEN** o usuário remove a única tag do dia
-- **THEN** o dia continua existindo
-- **AND** não mostra tag de grupo nem "Corpo inteiro"
+#### Scenario: Supino mostra Peito e não o tríceps
+- **WHEN** o usuário confirma Supino reto com barra no dia
+- **THEN** o card desse dia mostra a tag Peito
+- **AND** não mostra Tríceps
+
+#### Scenario: Agachamento mostra coxa e glúteo
+- **WHEN** o usuário confirma Agachamento livre no dia
+- **THEN** o card mostra Quadríceps e Glúteos
 
 ### Requirement: Tag com nome e cor estável
 Toda tag de grupo MUST mostrar o nome do grupo. O mesmo grupo MUST usar a mesma cor em qualquer dia e na lista do seletor. A cor MUST NOT ser o único sinal: o nome continua visível na aparência clara e na escura.
 
 #### Scenario: Peito igual nos dois superiores
-- **WHEN** "Superiores 1" e "Superiores 2" mostram Peito
+- **WHEN** "Superiores 1" e "Superiores 2" têm um exercício com Peito em 4 ou 5
 - **THEN** as duas tags mostram o texto "Peito"
 - **AND** as duas usam a mesma cor
 
@@ -300,16 +303,37 @@ Texto e filtro de grupo MUST restringir como na consulta do catálogo, e a orden
 - **WHEN** o seletor está aberto e o usuário cancela sem escolher
 - **THEN** o dia permanece com os exercícios que já tinha
 
+### Requirement: Confirmar a seleção de vários exercícios
+O seletor MUST deixar marcar mais de um exercício e MUST indicar quais estão marcados, deixando claro que a escolha pode ser múltipla. Confirmar MUST alocar só os marcados e voltar à lista do dia, que pede a meta. Voltar ou cancelar sem confirmar MUST NOT incluir os marcados nessa lista. Exercício já alocado MUST NOT voltar a ser marcado.
+
+#### Scenario: Vários de uma vez
+- **WHEN** o usuário marca Supino reto com barra e Remada curvada com barra e confirma
+- **THEN** o dia lista os dois
+- **AND** pede a meta de cada um
+
+#### Scenario: Voltar descarta a marca
+- **WHEN** o usuário marca Agachamento livre e volta sem confirmar
+- **THEN** o dia não contém Agachamento livre
+
 #### Scenario: Exercício repetido não duplica
 - **WHEN** o dia já tem Supino reto com barra e o usuário escolhe Supino reto com barra de novo
 - **THEN** o dia continua com uma única ocorrência de Supino reto com barra
 
-### Requirement: Meta opcional de séries e repetições
-Cada exercício do dia MUST aceitar uma meta vazia ou inteiros maiores ou iguais a 1 para séries, repetições mínimas e repetições máximas. Com mínimo e máximo preenchidos, o máximo MUST ser maior ou igual ao mínimo. Valor rejeitado MUST NOT substituir a meta anterior nem remover o exercício.
+### Requirement: Meta opcional de séries, repetições e peso
+Cada exercício do dia MUST aceitar uma meta vazia ou inteiros maiores ou iguais a 1 para séries, repetições mínimas e repetições máximas, e um peso em quilogramas maior que zero ou vazio. Com mínimo e máximo preenchidos, o máximo MUST ser maior ou igual ao mínimo. Valor rejeitado MUST NOT substituir a meta anterior nem remover o exercício.
 
 #### Scenario: Faixa 3 séries de 8 a 12
 - **WHEN** o usuário grava 3 séries, mínimo 8 e máximo 12 em Supino reto com barra
 - **THEN** o dia mostra 3, 8 e 12 nesse exercício
+
+#### Scenario: Peso junto da faixa
+- **WHEN** o usuário grava 3 séries, mínimo 8, máximo 12 e 60 kg
+- **THEN** o dia mostra 3, 8, 12 e 60 kg nesse exercício
+
+#### Scenario: Peso zero não entra
+- **WHEN** a meta está vazia e o usuário tenta gravar 0 kg
+- **THEN** o dia continua sem peso nesse exercício
+- **AND** o exercício continua no dia
 
 #### Scenario: Só as séries
 - **WHEN** o usuário grava 3 séries e deixa mínimo e máximo vazios
@@ -331,7 +355,7 @@ Cada exercício do dia MUST aceitar uma meta vazia ou inteiros maiores ou iguais
 - **AND** o exercício continua no dia
 
 #### Scenario: Limpar a meta
-- **WHEN** a meta é 3 séries de 8 a 12 e o usuário limpa os três valores
+- **WHEN** a meta é 3 séries de 8 a 12 e 60 kg e o usuário limpa séries, repetições e peso
 - **THEN** o dia deixa de mostrar séries e repetições nesse exercício
 - **AND** o exercício continua no dia
 

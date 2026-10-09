@@ -54,8 +54,8 @@ Regras de dependência entre camadas: ver `AGENTS.md`.
 | Modelo de divisão | `SplitTemplate` | Uma das nove divisões fechadas: Corpo inteiro, Superiores e inferiores, Push Pull Legs, Push Pull Legs 2x, ABC, ABC 2x, ABCD, ABCDE e Personalizado. Programa nomeado (Arnold, PHUL, PHAT, PPLUL, bro split) não é modelo. Bro split é a ênfase inicial do ABCDE. |
 | Plano de treino | `WorkoutPlan` | Plano do usuário baseado em um modelo de divisão. Apenas um ativo por vez; os anteriores ficam arquivados. |
 | Dia de treino | `WorkoutDay` | Um dia do plano, com weekday (segunda = 1 … domingo = 7). No máximo um por dia da semana. Descanso é a ausência de dia. Dias repetidos do modelo são registros independentes. |
-| Ênfase do dia | `DayEmphasis` | Sugestão de grupos (agonista 4 ou 5) ou modo corpo inteiro. Não restringe o catálogo. |
-| Exercício planejado | `PlannedExercise` | Exercício alocado a um dia de treino, com ordem e meta (séries, faixa de reps). |
+| Ênfase do dia | `DayEmphasis` | Sugestão gravada pelo modelo para ordenar o seletor. Não restringe o catálogo e não é a tag do card. |
+| Exercício planejado | `PlannedExercise` | Exercício alocado a um dia de treino, com ordem e meta opcional (séries, faixa de reps e peso em kg). As tags do card saem dos grupos que esses exercícios recrutam em 4 ou 5. |
 | Sessão | `Session` | Execução real de um treino em uma data. Pode seguir um dia de treino ou divergir dele. |
 | Exercício executado | `SessionExercise` | Exercício realizado dentro de uma sessão. |
 | Série | `Set` | Uma série executada: repetições e carga em kg. Pode ser marcada como aquecimento. |
@@ -187,3 +187,4 @@ Resolver nas specs da change correspondente:
 | 2026-10-08 | Três seções: Início, Treinos e Dashboard; catálogo de exercícios não é seção raiz | A lista completa entra na criação do plano e na troca de exercício na sessão; no registro, só os exercícios daquele treino |
 | 2026-10-09 | Catálogo da base é dado de referência: doze grupos, recrutamento 5/4/1–3 com filtro de grupo em 4 ou 5, UUID fixo e `owner_id` nulo, equipamento separado do tipo de carga | A consulta e o dashboard futuro usam o mesmo recorte; correção entra em migration nova e a base não sobe no sync |
 | 2026-10-09 | Nove modelos de divisão; programa nomeado não é modelo; `WorkoutDay` guarda weekday 1–7 com no máximo um treino por dia; dias repetidos são independentes; ênfase é sugestão; `local_owner` fica fora do sync | A semana visível e o sync futuro usam o mesmo plano, sem card para Arnold, PHUL, PHAT ou PPLUL |
+| 2026-10-09 | Tags do card saem dos exercícios alocados (agonista 4 ou 5); a ênfase do modelo só ordena o seletor; a meta do exercício planejado inclui peso em kg | O card não pede grupo muscular antes do exercício, e a carga planejada fica junto da faixa de séries |

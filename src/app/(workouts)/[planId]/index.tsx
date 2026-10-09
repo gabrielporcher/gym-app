@@ -22,7 +22,7 @@ function routeParam(value: string | string[] | undefined): string | null {
 export default function WorkoutPlanScreen() {
   const params = useLocalSearchParams<{ planId: string }>();
   const planId = routeParam(params.planId);
-  const { plan, canAddDay, canRemoveDay, openWeekdays, rename, renameDay, addDay, removeDay, moveDay, changeEmphasis } =
+  const { plan, canAddDay, canRemoveDay, openWeekdays, rename, renameDay, addDay, removeDay, moveDay } =
     useWorkoutPlan(planId);
   const [movingDayId, setMovingDayId] = useState<string | null>(null);
 
@@ -45,7 +45,7 @@ export default function WorkoutPlanScreen() {
               <WorkoutDayCard
                 key={day.id}
                 name={day.name}
-                emphasis={day.emphasis}
+                tags={day.tags}
                 canRemove={canRemoveDay}
                 destinations={openWeekdays}
                 moving={movingDayId === day.id}
@@ -57,9 +57,6 @@ export default function WorkoutPlanScreen() {
                   setMovingDayId(null);
                   void moveDay(day.id, weekday);
                 }}
-                onAddGroup={(group) => void changeEmphasis(day.id, { type: 'add-group', group })}
-                onRemoveGroup={(group) => void changeEmphasis(day.id, { type: 'remove-group', group })}
-                onRemoveFullBody={() => void changeEmphasis(day.id, { type: 'remove-full-body' })}
                 onOpenExercises={() => router.push(`./days/${day.id}`, { relativeToDirectory: true })}
               />
             ))}

@@ -1,5 +1,6 @@
 import {
   filterExercises,
+  MUSCLE_GROUP_NAMES,
   type CatalogExercise,
   type ExerciseKind,
   type ExerciseQuery,
@@ -385,23 +386,47 @@ export function listExercisesForDay(
   };
 }
 
+export function visibleMuscleTags(
+  rows: readonly { groupName: MuscleGroupName; recruitment: number }[],
+): MuscleGroupName[] {
+  const found = new Set<MuscleGroupName>();
+
+  for (const row of rows) {
+    if (row.recruitment >= AGONIST_MIN_SCORE) {
+      found.add(row.groupName);
+    }
+  }
+
+  return MUSCLE_GROUP_NAMES.filter((name) => found.has(name));
+}
+
 export type ExerciseTarget = {
   sets: number | null;
   repMin: number | null;
   repMax: number | null;
+  weightKg: number | null;
 };
 
-export const EMPTY_EXERCISE_TARGET: ExerciseTarget = { sets: null, repMin: null, repMax: null };
+export const EMPTY_EXERCISE_TARGET: ExerciseTarget = { sets: null, repMin: null, repMax: null, weightKg: null };
 
 function isValidTargetCount(value: number | null): boolean {
   return value === null || (Number.isInteger(value) && value >= 1);
+}
+
+function isValidWeight(value: number | null): boolean {
+  return value === null || (Number.isFinite(value) && value > 0);
 }
 
 export function applyExerciseTarget(
   current: ExerciseTarget,
   next: ExerciseTarget,
 ): { ok: true; target: ExerciseTarget } | { ok: false; target: ExerciseTarget } {
-  if (!isValidTargetCount(next.sets) || !isValidTargetCount(next.repMin) || !isValidTargetCount(next.repMax)) {
+  if (
+    !isValidTargetCount(next.sets) ||
+    !isValidTargetCount(next.repMin) ||
+    !isValidTargetCount(next.repMax) ||
+    !isValidWeight(next.weightKg)
+  ) {
     return { ok: false, target: current };
   }
 
@@ -411,7 +436,7 @@ export function applyExerciseTarget(
 
   return {
     ok: true,
-    target: { sets: next.sets, repMin: next.repMin, repMax: next.repMax },
+    target: { sets: next.sets, repMin: next.repMin, repMax: next.repMax, weightKg: next.weightKg },
   };
 }
 

@@ -1,5 +1,5 @@
-import { Stack, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { Stack, useLocalSearchParams, useNavigation } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 
 import { Screen } from '@/components/ui/screen';
@@ -21,13 +21,49 @@ export default function WorkoutDayScreen() {
   const params = useLocalSearchParams<{ planId: string; dayId: string }>();
   const planId = routeParam(params.planId);
   const dayId = routeParam(params.dayId);
-  const { day, groups, text, muscleGroup, selector, setText, setMuscleGroup, allocate, reorder, saveTarget } =
+  const navigation = useNavigation();
+  const { day, groups, text, muscleGroup, selector, setText, setMuscleGroup, allocateMany, reorder, saveTarget } =
     useWorkoutDay(planId, dayId);
   const [selecting, setSelecting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  function leaveSelection() {
+    setSelectedIds([]);
+    setText('');
+    setMuscleGroup(undefined);
+    setSelecting(false);
+  }
+
+  useEffect(() => {
+    if (!selecting) {
+      return undefined;
+    }
+
+    const unsubscribe = navigation.addListener('beforeRemove', (event) => {
+      event.preventDefault();
+      setSelectedIds([]);
+      setText('');
+      setMuscleGroup(undefined);
+      setSelecting(false);
+    });
+
+    return unsubscribe;
+  }, [navigation, selecting, setMuscleGroup, setText]);
+
+  async function confirmSelection() {
+    if (selectedIds.length === 0) {
+      return;
+    }
+
+    await allocateMany(selectedIds);
+    leaveSelection();
+  }
 
   return (
     <Screen edges={['left', 'right']}>
-      <Stack.Screen options={{ title: 'Exercícios', headerLargeTitle: false }} />
+      <Stack.Screen
+        options={{ title: selecting ? 'Adicionar exercícios' : 'Exercícios', headerLargeTitle: false }}
+      />
       {day === null ? <Text>Esse dia não está mais disponível.</Text> : null}
       {day && !selecting ? (
         <ScrollView style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
@@ -35,7 +71,10 @@ export default function WorkoutDayScreen() {
             exercises={day.exercises}
             onMove={(plannedExerciseId, direction) => void reorder(plannedExerciseId, direction)}
             onCommitTarget={(plannedExerciseId, target) => saveTarget(plannedExerciseId, target)}
-            onAdd={() => setSelecting(true)}
+            onAdd={() => {
+              setSelectedIds([]);
+              setSelecting(true);
+            }}
           />
         </ScrollView>
       ) : null}
@@ -45,14 +84,16 @@ export default function WorkoutDayScreen() {
           list={selector}
           text={text}
           muscleGroup={muscleGroup}
+          selectedIds={selectedIds}
           onChangeText={setText}
           onChangeMuscleGroup={setMuscleGroup}
-          onChoose={(exerciseId) => void allocate(exerciseId)}
-          onCancel={() => {
-            setText('');
-            setMuscleGroup(undefined);
-            setSelecting(false);
-          }}
+          onToggle={(exerciseId) =>
+            setSelectedIds((current) =>
+              current.includes(exerciseId) ? current.filter((id) => id !== exerciseId) : [...current, exerciseId],
+            )
+          }
+          onConfirm={() => void confirmSelection()}
+          onCancel={leaveSelection}
         />
       ) : null}
     </Screen>

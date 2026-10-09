@@ -22,6 +22,13 @@
       "when": 1791567482283,
       "tag": "0002_workout_plans",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1791577455277,
+      "tag": "0003_planned_exercise_weight",
+      "breakpoints": true
     }
   ]
 }

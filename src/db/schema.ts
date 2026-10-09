@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { check, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { check, integer, real, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
 export const muscleGroups = sqliteTable('muscle_groups', {
   id: text('id').primaryKey(),
@@ -169,6 +169,7 @@ export const plannedExercises = sqliteTable(
     targetSets: integer('target_sets'),
     targetRepMin: integer('target_rep_min'),
     targetRepMax: integer('target_rep_max'),
+    targetWeightKg: real('target_weight_kg'),
     createdAt: text('created_at').notNull(),
     updatedAt: text('updated_at').notNull(),
     deletedAt: text('deleted_at'),
@@ -180,6 +181,10 @@ export const plannedExercises = sqliteTable(
     check(
       'planned_exercises_rep_range',
       sql`${table.targetRepMin} is null or ${table.targetRepMax} is null or ${table.targetRepMax} >= ${table.targetRepMin}`,
+    ),
+    check(
+      'planned_exercises_target_weight_kg',
+      sql`${table.targetWeightKg} is null or ${table.targetWeightKg} > 0`,
     ),
     uniqueIndex('planned_exercises_active_exercise')
       .on(table.workoutDayId, table.exerciseId)

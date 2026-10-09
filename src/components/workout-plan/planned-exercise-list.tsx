@@ -21,26 +21,55 @@ type PlannedExerciseListProps = {
   onAdd: () => void;
 };
 
+function formatWeight(weightKg: number): string {
+  const text = Number.isInteger(weightKg) ? String(weightKg) : String(weightKg).replace('.', ',');
+  return `${text} kg`;
+}
+
 function formatTarget(target: ExerciseTarget): string | null {
-  const { sets, repMin, repMax } = target;
+  const { sets, repMin, repMax, weightKg } = target;
+  const weight = weightKg === null ? null : formatWeight(weightKg);
   if (sets === null && repMin === null && repMax === null) {
-    return null;
+    return weight;
   }
 
   if (sets !== null && repMin === null && repMax === null) {
-    return `${sets} séries`;
+    return weight ? `${sets} séries, ${weight}` : `${sets} séries`;
   }
 
   const parts = [sets, repMin, repMax].filter((value): value is number => value !== null);
+  let summary: string | null = null;
   if (parts.length === 3) {
-    return `${parts[0]}, ${parts[1]} e ${parts[2]}`;
+    summary = `${parts[0]}, ${parts[1]} e ${parts[2]}`;
+  } else if (parts.length === 2) {
+    summary = `${parts[0]} e ${parts[1]}`;
+  } else if (parts[0] !== undefined) {
+    summary = String(parts[0]);
   }
 
-  if (parts.length === 2) {
-    return `${parts[0]} e ${parts[1]}`;
+  if (summary && weight) {
+    return `${summary}, ${weight}`;
   }
 
-  return parts[0] !== undefined ? String(parts[0]) : null;
+  return summary ?? weight;
+}
+
+function parseWeight(value: string): number | null | undefined {
+  const trimmed = value.trim().replace(',', '.');
+  if (trimmed === '') {
+    return null;
+  }
+
+  if (!/^\d+(\.\d+)?$/.test(trimmed)) {
+    return undefined;
+  }
+
+  const parsed = Number(trimmed);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return undefined;
+  }
+
+  return parsed;
 }
 
 function parseCount(value: string): number | null | undefined {
@@ -66,24 +95,37 @@ function TargetEditor({
   const [sets, setSets] = useState(target.sets?.toString() ?? '');
   const [repMin, setRepMin] = useState(target.repMin?.toString() ?? '');
   const [repMax, setRepMax] = useState(target.repMax?.toString() ?? '');
+  const [weightKg, setWeightKg] = useState(target.weightKg === null ? '' : formatWeight(target.weightKg).replace(' kg', ''));
   const summary = formatTarget(target);
 
   function reset() {
     setSets(target.sets?.toString() ?? '');
     setRepMin(target.repMin?.toString() ?? '');
     setRepMax(target.repMax?.toString() ?? '');
+    setWeightKg(target.weightKg === null ? '' : formatWeight(target.weightKg).replace(' kg', ''));
   }
 
   async function commit() {
     const parsedSets = parseCount(sets);
     const parsedMin = parseCount(repMin);
     const parsedMax = parseCount(repMax);
-    if (parsedSets === undefined || parsedMin === undefined || parsedMax === undefined) {
+    const parsedWeight = parseWeight(weightKg);
+    if (
+      parsedSets === undefined ||
+      parsedMin === undefined ||
+      parsedMax === undefined ||
+      parsedWeight === undefined
+    ) {
       reset();
       return;
     }
 
-    const accepted = await onCommit({ sets: parsedSets, repMin: parsedMin, repMax: parsedMax });
+    const accepted = await onCommit({
+      sets: parsedSets,
+      repMin: parsedMin,
+      repMax: parsedMax,
+      weightKg: parsedWeight,
+    });
     if (!accepted) {
       reset();
     }
@@ -113,6 +155,13 @@ function TargetEditor({
         accessibilityLabel="Repetições máximas"
         keyboardType="number-pad"
       />
+      <Input
+        value={weightKg}
+        onChangeText={setWeightKg}
+        placeholder="Peso (kg)"
+        accessibilityLabel="Peso em quilogramas"
+        keyboardType="decimal-pad"
+      />
       <Button variant="plain" onPress={commit}>
         Gravar meta
       </Button>
@@ -128,7 +177,7 @@ export function PlannedExerciseList({ exercises, onMove, onCommitTarget, onAdd }
           <View style={styles.exercise}>
             <Text>{exercise.name}</Text>
             <TargetEditor
-              key={`${exercise.target.sets ?? ''}-${exercise.target.repMin ?? ''}-${exercise.target.repMax ?? ''}`}
+              key={`${exercise.target.sets ?? ''}-${exercise.target.repMin ?? ''}-${exercise.target.repMax ?? ''}-${exercise.target.weightKg ?? ''}`}
               target={exercise.target}
               onCommit={(target) => onCommitTarget(exercise.id, target)}
             />

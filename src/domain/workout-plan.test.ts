@@ -11,6 +11,7 @@ import {
   addWorkoutDay,
   allocateExercise,
   applyExerciseTarget,
+  visibleMuscleTags,
   buildPlanDraft,
   canAddWorkoutDay,
   changeEmphasis,
@@ -459,34 +460,67 @@ test('Sugeridos e Outros só quando há grupos e as duas partes têm item', () =
   ).toBe(false);
 });
 
-const RANGE_TARGET: ExerciseTarget = { sets: 3, repMin: 8, repMax: 12 };
+const RANGE_TARGET: ExerciseTarget = { sets: 3, repMin: 8, repMax: 12, weightKg: null };
 
 test('meta vazia, só séries, faixa 3/8/12, 8/8 e limpar são aceitos', () => {
   expect(applyExerciseTarget(RANGE_TARGET, EMPTY_EXERCISE_TARGET)).toEqual({
     ok: true,
     target: EMPTY_EXERCISE_TARGET,
   });
-  expect(applyExerciseTarget(EMPTY_EXERCISE_TARGET, { sets: 3, repMin: null, repMax: null })).toEqual({
+  expect(applyExerciseTarget(EMPTY_EXERCISE_TARGET, { sets: 3, repMin: null, repMax: null, weightKg: null })).toEqual({
     ok: true,
-    target: { sets: 3, repMin: null, repMax: null },
+    target: { sets: 3, repMin: null, repMax: null, weightKg: null },
   });
   expect(applyExerciseTarget(EMPTY_EXERCISE_TARGET, RANGE_TARGET)).toEqual({ ok: true, target: RANGE_TARGET });
-  expect(applyExerciseTarget(EMPTY_EXERCISE_TARGET, { sets: null, repMin: 8, repMax: 8 })).toEqual({
+  expect(applyExerciseTarget(EMPTY_EXERCISE_TARGET, { sets: null, repMin: 8, repMax: 8, weightKg: null })).toEqual({
     ok: true,
-    target: { sets: null, repMin: 8, repMax: 8 },
+    target: { sets: null, repMin: 8, repMax: 8, weightKg: null },
+  });
+  expect(applyExerciseTarget(EMPTY_EXERCISE_TARGET, { ...EMPTY_EXERCISE_TARGET, weightKg: 60 })).toEqual({
+    ok: true,
+    target: { ...EMPTY_EXERCISE_TARGET, weightKg: 60 },
+  });
+  expect(applyExerciseTarget(EMPTY_EXERCISE_TARGET, { ...RANGE_TARGET, weightKg: 62.5 })).toEqual({
+    ok: true,
+    target: { ...RANGE_TARGET, weightKg: 62.5 },
   });
   expect(applyExerciseTarget(RANGE_TARGET, EMPTY_EXERCISE_TARGET).target).toEqual(EMPTY_EXERCISE_TARGET);
 });
 
 test('máximo menor que o mínimo e zero não substituem a meta anterior', () => {
-  expect(applyExerciseTarget(RANGE_TARGET, { sets: 3, repMin: 8, repMax: 6 })).toEqual({
+  expect(applyExerciseTarget(RANGE_TARGET, { sets: 3, repMin: 8, repMax: 6, weightKg: null })).toEqual({
     ok: false,
     target: RANGE_TARGET,
   });
-  expect(applyExerciseTarget(EMPTY_EXERCISE_TARGET, { sets: 0, repMin: null, repMax: null })).toEqual({
+  expect(applyExerciseTarget(EMPTY_EXERCISE_TARGET, { sets: 0, repMin: null, repMax: null, weightKg: null })).toEqual({
     ok: false,
     target: EMPTY_EXERCISE_TARGET,
   });
+  expect(applyExerciseTarget(EMPTY_EXERCISE_TARGET, { ...EMPTY_EXERCISE_TARGET, weightKg: 0 })).toEqual({
+    ok: false,
+    target: EMPTY_EXERCISE_TARGET,
+  });
+  expect(
+    applyExerciseTarget(
+      { ...RANGE_TARGET, weightKg: 60 },
+      { ...RANGE_TARGET, weightKg: -1 },
+    ),
+  ).toEqual({
+    ok: false,
+    target: { ...RANGE_TARGET, weightKg: 60 },
+  });
+});
+
+test('tags visíveis saem só do agonista dos exercícios alocados', () => {
+  expect(visibleMuscleTags([])).toEqual([]);
+  expect(visibleMuscleTags(supinoReto.recruitment)).toEqual(['Peito']);
+  expect(visibleMuscleTags(supinoInclinado.recruitment)).toEqual(['Peito', 'Ombros']);
+  expect(visibleMuscleTags([...supinoReto.recruitment, ...agachamento.recruitment])).toEqual([
+    'Peito',
+    'Quadríceps',
+    'Glúteos',
+  ]);
+  expect(visibleMuscleTags([scored('Tríceps cabeça lateral', 'Tríceps', 3)])).toEqual([]);
 });
 
 test('nome vazio mantém o anterior', () => {

@@ -2,9 +2,11 @@ import { and, asc, eq, inArray, isNull } from 'drizzle-orm';
 
 import { db } from '@/db/client';
 import {
+  exerciseMuscles,
   exercises,
   localOwner,
   muscleGroups,
+  muscles,
   plannedExercises,
   workoutDayMuscles,
   workoutDays,
@@ -22,6 +24,7 @@ import {
   moveWorkoutDay,
   removeWorkoutDay,
   SPLIT_TEMPLATE_IDS,
+  visibleMuscleTags,
   type DayEmphasis,
   type DraftWorkoutDay,
   type EmphasisChange,
@@ -29,6 +32,7 @@ import {
   type SplitTemplateId,
   type Weekday,
 } from '@/domain/workout-plan';
+import { createId } from '@/lib/create-id';
 
 const LOCAL_OWNER_ROW_ID = 'local';
 
@@ -64,6 +68,7 @@ export type WorkoutDayDetails = {
   name: string;
   weekday: Weekday;
   emphasis: DayEmphasis;
+  tags: MuscleGroupName[];
   exercises: PlannedExerciseDetails[];
 };
 
@@ -83,10 +88,6 @@ type StoredDay = {
   weekday: Weekday;
   emphasis: DayEmphasis;
 };
-
-function createId(): string {
-  return globalThis.crypto.randomUUID();
-}
 
 function now(): string {
   return new Date().toISOString();
@@ -249,6 +250,7 @@ function loadExercises(tx: Transaction, dayIds: readonly string[]): Map<string, 
       targetSets: plannedExercises.targetSets,
       targetRepMin: plannedExercises.targetRepMin,
       targetRepMax: plannedExercises.targetRepMax,
+      targetWeightKg: plannedExercises.targetWeightKg,
       name: exercises.name,
     })
     .from(plannedExercises)
@@ -270,7 +272,12 @@ function loadExercises(tx: Transaction, dayIds: readonly string[]): Map<string, 
       exerciseId: row.exerciseId,
       name: row.name,
       sortOrder: row.sortOrder,
-      target: { sets: row.targetSets, repMin: row.targetRepMin, repMax: row.targetRepMax },
+      target: {
+        sets: row.targetSets,
+        repMin: row.targetRepMin,
+        repMax: row.targetRepMax,
+        weightKg: row.targetWeightKg,
+      },
     });
     byDay.set(row.workoutDayId, current);
   }
@@ -278,12 +285,52 @@ function loadExercises(tx: Transaction, dayIds: readonly string[]): Map<string, 
   return byDay;
 }
 
+function loadVisibleTags(tx: Transaction, dayIds: readonly string[]): Map<string, MuscleGroupName[]> {
+  const tags = new Map<string, MuscleGroupName[]>();
+  if (dayIds.length === 0) {
+    return tags;
+  }
+
+  const rows = tx
+    .select({
+      workoutDayId: plannedExercises.workoutDayId,
+      groupName: muscleGroups.name,
+      recruitment: exerciseMuscles.recruitment,
+    })
+    .from(plannedExercises)
+    .innerJoin(exerciseMuscles, eq(exerciseMuscles.exerciseId, plannedExercises.exerciseId))
+    .innerJoin(muscles, eq(muscles.id, exerciseMuscles.muscleId))
+    .innerJoin(muscleGroups, eq(muscleGroups.id, muscles.muscleGroupId))
+    .where(
+      and(
+        inArray(plannedExercises.workoutDayId, [...dayIds]),
+        isNull(plannedExercises.deletedAt),
+        isNull(exerciseMuscles.deletedAt),
+        isNull(muscles.deletedAt),
+        isNull(muscleGroups.deletedAt),
+      ),
+    )
+    .all();
+
+  const rowsByDay = new Map<string, { groupName: MuscleGroupName; recruitment: number }[]>();
+  for (const row of rows) {
+    const current = rowsByDay.get(row.workoutDayId) ?? [];
+    current.push({ groupName: asMuscleGroupName(row.groupName), recruitment: row.recruitment });
+    rowsByDay.set(row.workoutDayId, current);
+  }
+
+  for (const [dayId, groupRows] of rowsByDay) {
+    tags.set(dayId, visibleMuscleTags(groupRows));
+  }
+
+  return tags;
+}
+
 function toDetails(tx: Transaction, plan: NonNullable<ReturnType<typeof findPlan>>): WorkoutPlanDetails {
   const stored = loadStoredDays(tx, plan.id);
-  const exercisesByDay = loadExercises(
-    tx,
-    stored.map((day) => day.id),
-  );
+  const dayIds = stored.map((day) => day.id);
+  const exercisesByDay = loadExercises(tx, dayIds);
+  const tagsByDay = loadVisibleTags(tx, dayIds);
 
   return {
     id: plan.id,
@@ -296,6 +343,7 @@ function toDetails(tx: Transaction, plan: NonNullable<ReturnType<typeof findPlan
       name: day.name,
       weekday: day.weekday,
       emphasis: day.emphasis,
+      tags: tagsByDay.get(day.id) ?? [],
       exercises: exercisesByDay.get(day.id) ?? [],
     })),
   };
@@ -680,11 +728,11 @@ export async function changeDayEmphasis(planId: string, dayId: string, change: E
   });
 }
 
-export async function allocateExerciseOnDay(
+export async function allocateExercisesOnDay(
   planId: string,
   dayId: string,
-  exerciseId: string,
-): Promise<{ ok: true } | { ok: false; reason: 'duplicate' | 'missing' }> {
+  exerciseIds: readonly string[],
+): Promise<{ ok: true; allocated: number } | { ok: false; reason: 'missing' }> {
   return run((tx) => {
     const plan = findPlan(tx, planId);
     const day = findStoredDay(tx, planId, dayId);
@@ -692,33 +740,55 @@ export async function allocateExerciseOnDay(
       return { ok: false, reason: 'missing' };
     }
 
-    const current = loadExercises(tx, [dayId]).get(dayId) ?? [];
-    const allocated = allocateExercise(
-      current.map((exercise) => exercise.exerciseId),
-      exerciseId,
-    );
-    if (!allocated.ok) {
-      return { ok: false, reason: 'duplicate' };
+    let currentIds = (loadExercises(tx, [dayId]).get(dayId) ?? []).map((exercise) => exercise.exerciseId);
+    const timestamp = now();
+    let allocated = 0;
+
+    for (const exerciseId of exerciseIds) {
+      const next = allocateExercise(currentIds, exerciseId);
+      if (!next.ok) {
+        continue;
+      }
+
+      currentIds = next.exerciseIds;
+      allocated += 1;
+      tx.insert(plannedExercises)
+        .values({
+          id: createId(),
+          workoutDayId: dayId,
+          ownerId: plan.ownerId,
+          exerciseId,
+          sortOrder: currentIds.indexOf(exerciseId),
+          targetSets: null,
+          targetRepMin: null,
+          targetRepMax: null,
+          targetWeightKg: null,
+          createdAt: timestamp,
+          updatedAt: timestamp,
+          deletedAt: null,
+        })
+        .run();
     }
 
-    const timestamp = now();
-    tx.insert(plannedExercises)
-      .values({
-        id: createId(),
-        workoutDayId: dayId,
-        ownerId: plan.ownerId,
-        exerciseId,
-        sortOrder: allocated.exerciseIds.indexOf(exerciseId),
-        targetSets: null,
-        targetRepMin: null,
-        targetRepMax: null,
-        createdAt: timestamp,
-        updatedAt: timestamp,
-        deletedAt: null,
-      })
-      .run();
-    return { ok: true };
+    return { ok: true, allocated };
   });
+}
+
+export async function allocateExerciseOnDay(
+  planId: string,
+  dayId: string,
+  exerciseId: string,
+): Promise<{ ok: true } | { ok: false; reason: 'duplicate' | 'missing' }> {
+  const result = await allocateExercisesOnDay(planId, dayId, [exerciseId]);
+  if (!result.ok) {
+    return result;
+  }
+
+  if (result.allocated === 0) {
+    return { ok: false, reason: 'duplicate' };
+  }
+
+  return { ok: true };
 }
 
 export async function updatePlannedExerciseTarget(
@@ -744,6 +814,7 @@ export async function updatePlannedExerciseTarget(
         targetSets: applied.target.sets,
         targetRepMin: applied.target.repMin,
         targetRepMax: applied.target.repMax,
+        targetWeightKg: applied.target.weightKg,
         updatedAt: now(),
       })
       .where(and(eq(plannedExercises.id, plannedExerciseId), isNull(plannedExercises.deletedAt)))

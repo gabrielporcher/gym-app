@@ -7,21 +7,25 @@ type ListItemProps = {
   title: string;
   subtitle?: string;
   showChevron?: boolean;
+  selected?: boolean;
   onPress?: () => void;
 };
 
-export function ListItem({ title, subtitle, showChevron = false, onPress }: ListItemProps) {
+export function ListItem({ title, subtitle, showChevron = false, selected = false, onPress }: ListItemProps) {
   const colors = Colors[resolveScheme(useColorScheme())];
+  const titleColor = selected ? 'onTint' : 'label';
+  const subtitleColor = selected ? 'onTint' : 'secondaryLabel';
   const content = (
     <>
       <View style={styles.copy}>
-        <Text>{title}</Text>
+        <Text color={titleColor}>{title}</Text>
         {subtitle ? (
-          <Text variant="subheadline" color="secondaryLabel">
+          <Text variant="subheadline" color={subtitleColor}>
             {subtitle}
           </Text>
         ) : null}
       </View>
+      {selected ? <Text color="onTint">✓</Text> : null}
       {showChevron ? <Text color="tertiaryLabel">›</Text> : null}
     </>
   );
@@ -30,8 +34,15 @@ export function ListItem({ title, subtitle, showChevron = false, onPress }: List
     return (
       <Pressable
         accessibilityRole="button"
+        accessibilityState={{ selected }}
         onPress={onPress}
-        style={[styles.row, { backgroundColor: colors.secondaryGroupedBackground, borderBottomColor: colors.separator }]}>
+        style={[
+          styles.row,
+          {
+            backgroundColor: selected ? colors.tint : colors.secondaryGroupedBackground,
+            borderBottomColor: colors.separator,
+          },
+        ]}>
         {content}
       </Pressable>
     );

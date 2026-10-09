@@ -6,12 +6,12 @@ import { NameField } from '@/components/workout-plan/name-field';
 import { MuscleTag } from '@/components/workout-plan/muscle-tag';
 import { WEEKDAY_LABELS } from '@/components/workout-plan/weekday-strip';
 import { Spacing } from '@/constants/theme';
-import { MUSCLE_GROUP_NAMES, type MuscleGroupName } from '@/domain/exercise-catalog';
-import type { DayEmphasis, Weekday } from '@/domain/workout-plan';
+import type { MuscleGroupName } from '@/domain/exercise-catalog';
+import type { Weekday } from '@/domain/workout-plan';
 
 type WorkoutDayCardProps = {
   name: string;
-  emphasis: DayEmphasis;
+  tags: readonly MuscleGroupName[];
   canRemove: boolean;
   destinations: readonly Weekday[];
   moving: boolean;
@@ -20,15 +20,12 @@ type WorkoutDayCardProps = {
   onStartMove: () => void;
   onCancelMove: () => void;
   onMove: (weekday: Weekday) => void;
-  onAddGroup: (group: MuscleGroupName) => void;
-  onRemoveGroup: (group: MuscleGroupName) => void;
-  onRemoveFullBody: () => void;
   onOpenExercises: () => void;
 };
 
 export function WorkoutDayCard({
   name,
-  emphasis,
+  tags,
   canRemove,
   destinations,
   moving,
@@ -37,38 +34,21 @@ export function WorkoutDayCard({
   onStartMove,
   onCancelMove,
   onMove,
-  onAddGroup,
-  onRemoveGroup,
-  onRemoveFullBody,
   onOpenExercises,
 }: WorkoutDayCardProps) {
-  const currentGroups = emphasis.mode === 'groups' ? emphasis.groups : [];
-  const availableGroups = MUSCLE_GROUP_NAMES.filter((group) => !currentGroups.includes(group));
-
   return (
     <Card>
       <View style={styles.content}>
         <NameField key={name} value={name} onCommit={onRename} accessibilityLabel="Nome do dia" />
-        <View style={styles.tags}>
-          {emphasis.mode === 'full-body' ? (
-            <MuscleTag label="Corpo inteiro" onRemove={onRemoveFullBody} />
-          ) : (
-            currentGroups.map((group) => (
-              <MuscleTag key={group} label={group} group={group} onRemove={() => onRemoveGroup(group)} />
-            ))
-          )}
-        </View>
-        {availableGroups.length > 0 ? (
+        {tags.length > 0 ? (
           <View style={styles.tags}>
-            {availableGroups.map((group) => (
-              <Button key={group} variant="plain" onPress={() => onAddGroup(group)}>
-                {`Adicionar ${group}`}
-              </Button>
+            {tags.map((group) => (
+              <MuscleTag key={group} label={group} group={group} />
             ))}
           </View>
         ) : null}
         <Button variant="plain" onPress={onOpenExercises}>
-          Exercícios
+          Adicionar exercícios
         </Button>
         {moving ? (
           <View style={styles.tags}>
@@ -89,7 +69,7 @@ export function WorkoutDayCard({
         ) : null}
         {canRemove ? (
           <Button variant="destructive" onPress={onRemove}>
-            Remover
+            Excluir
           </Button>
         ) : null}
       </View>

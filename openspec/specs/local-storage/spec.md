@@ -42,20 +42,31 @@ Se o armazenamento local não puder ser preparado, o app MUST mostrar o texto "N
 - **THEN** o app não oferece uma ação de confirmar ou cancelar gravação
 - **AND** as três seções continuam ocultas
 
-### Requirement: Nenhum dado de treino nesta base
-Com o armazenamento pronto, o app MUST NOT ter plano de treino, sessão ou métrica gravados, porque esta base não oferece como criá-los. O catálogo de exercícios da base MUST estar disponível para consulta e não é dado de treino do usuário.
+### Requirement: Plano pode ser gravado; sessão e métrica não
+Com o armazenamento pronto, o app MUST poder gravar e devolver plano de treino. MUST NOT haver sessão nem métrica gravadas, porque esta base não oferece como criá-las. O catálogo de exercícios da base MUST permanecer consultável e MUST NOT incluir exercício criado pelo usuário.
 
-#### Scenario: Troca de seção não grava
-- **WHEN** o armazenamento está pronto e o usuário troca de seção
-- **THEN** o app não grava nem descarta plano de treino ou sessão
-- **AND** não pede confirmação
-- **AND** o catálogo da base permanece consultável
-
-#### Scenario: Dado de treino ausente
-- **WHEN** o armazenamento está pronto
+#### Scenario: Aberto sem plano
+- **WHEN** o armazenamento está pronto e nenhum plano foi gravado
 - **THEN** não há plano de treino, sessão nem métrica para consultar
 - **AND** a consulta do catálogo devolve os exercícios da base
+
+#### Scenario: Plano gravado não cria sessão
+- **WHEN** o armazenamento está pronto e existe um plano de treino gravado
+- **THEN** a consulta devolve esse plano
+- **AND** não há sessão nem métrica para consultar
+- **AND** a consulta do catálogo devolve os exercícios da base
+
+#### Scenario: Troca de seção não descarta o plano
+- **WHEN** o armazenamento está pronto, existe um plano gravado e o usuário troca de seção
+- **THEN** o app não grava um plano novo nem descarta o existente
+- **AND** não pede confirmação por causa da troca
+- **AND** o catálogo da base permanece consultável
 
 #### Scenario: Catálogo não é dado do usuário
 - **WHEN** o armazenamento está pronto e nenhum exercício da base foi retirado
 - **THEN** a consulta do catálogo não inclui exercício criado pelo usuário
+
+#### Scenario: Exclusão cancelada
+- **WHEN** o usuário cancela a exclusão de um plano gravado
+- **THEN** o plano continua consultável
+- **AND** continua sem sessão e sem métrica

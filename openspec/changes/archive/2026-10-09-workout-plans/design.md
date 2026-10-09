@@ -45,9 +45,9 @@ Alternativa considerada: tabela de modelos semeada por migration. Rejeitada porq
 
 ### 2. Ajuda visual: faixa da semana e tags
 
-A tela do plano mostra sete células, segunda a domingo, rótulos Seg, Ter, Qua, Qui, Sex, Sáb, Dom. Célula sem dia mostra "Descanso". Célula com dia mostra o nome do dia. Abaixo, um card por dia de treino, em ordem de dia da semana, com as tags.
+A tela do plano mostra sete células, segunda a domingo, rótulos Seg, Ter, Qua, Qui, Sex, Sáb, Dom. Célula sem dia mostra "Descanso". Célula com dia mostra o nome do dia. Abaixo, um card por dia de treino, em ordem de dia da semana. O card oferece mudar o nome, adicionar exercícios, mover e excluir. Não oferece acrescentar nem remover grupo.
 
-A tag de grupo mostra o nome e uma cor só daquele grupo, nos dois temas. "Corpo inteiro" usa a cor `tint` e esse texto, não as doze cores. A cor vive em `src/constants/theme.ts` (`MuscleGroupColors`), fora do domínio. O componente de tag fica em `components/workout-plan/`, porque conhece grupo muscular.
+A tag visível sai dos exercícios já alocados: grupo com recrutamento 4 ou 5. Dia sem exercício não mostra tag, nem "Corpo inteiro". A ênfase gravada pelo modelo continua só no seletor. A tag de grupo mostra o nome e uma cor só daquele grupo, nos dois temas. A cor vive em `src/constants/theme.ts` (`MuscleGroupColors`), fora do domínio. O componente de tag fica em `components/workout-plan/`, porque conhece grupo muscular.
 
 | Grupo | Claro | Escuro |
 |---|---|---|
@@ -80,7 +80,7 @@ Combina com um grupo quando algum recrutamento daquele `groupName` é 4 ou 5. No
 
 Com grupos: menor índice de grupo que combina; quem não combina vai para o fim. No mesmo grupo, `compound` antes de `isolation`, depois o nome. Sem grupos e sem corpo inteiro: só o nome. `full-body`: `compound` antes de `isolation`, depois o nome.
 
-Acrescentar um grupo num dia `full-body` grava `mode: 'groups'` com esse grupo e apaga a tag "Corpo inteiro".
+O seletor marca vários exercícios e só grava ao confirmar. Voltar ou cancelar descarta a marca. O botão de confirmar fica fixo no canto inferior direito. A lista do dia pede a meta, inclusive o peso em kg.
 
 ### 4. Schema
 
@@ -94,7 +94,7 @@ Migration nova. Não editar `0000` nem `0001`. UUID gerado no cliente. Timestamp
 
 `workout_day_muscles`: `id`, `workout_day_id`, `owner_id`, `muscle_group_id`, `sort_order`, timestamps. Índice único parcial em (`workout_day_id`, `muscle_group_id`). `muscle_group_id` aponta para a taxonomia, que tem o mesmo UUID em todo aparelho.
 
-`planned_exercises`: `id`, `workout_day_id`, `owner_id`, `exercise_id`, `sort_order`, `target_sets`, `target_rep_min`, `target_rep_max` (os três inteiros anuláveis), timestamps. Índice único parcial em (`workout_day_id`, `exercise_id`). `CHECK`: cada meta é nula ou `>= 1`; se mínimo e máximo existem, máximo `>=` mínimo.
+`planned_exercises`: `id`, `workout_day_id`, `owner_id`, `exercise_id`, `sort_order`, `target_sets`, `target_rep_min`, `target_rep_max` (inteiros anuláveis), `target_weight_kg` (real anulável, nulo ou `> 0`), timestamps. Índice único parcial em (`workout_day_id`, `exercise_id`). `CHECK`: cada meta de séries ou repetições é nula ou `>= 1`; se mínimo e máximo existem, máximo `>=` mínimo.
 
 Dia `full-body` não tem linha em `workout_day_muscles`. O repositório recusa gravar os dois ao mesmo tempo.
 
@@ -109,7 +109,7 @@ Ainda em `src/domain/workout-plan.ts`:
 - Nome "Treino N" com o menor inteiro positivo cujo nome exato ainda não existe.
 - Mover um dia para um weekday livre troca o weekday; o de origem fica sem dia. Weekday ocupado não é destino.
 - Remover o último dia é recusado.
-- Meta: aceita vazio ou inteiros `>= 1`; com os dois limites, máximo `>=` mínimo. Rejeição devolve a meta anterior.
+- Meta: aceita vazio ou inteiros `>= 1` para séries e repetições; com os dois limites, máximo `>=` mínimo. Peso em kg é vazio ou `> 0`. Rejeição devolve a meta anterior.
 
 O repositório aplica essas funções e persiste. Tela e hook não reinventam a regra.
 
@@ -126,7 +126,7 @@ Só o grupo `(workouts)`, que já tem um `Stack`.
 | `(workouts)/index` | Vazio com "Criar plano", ou o ativo e os arquivados |
 | `(workouts)/new` | Os nove modelos |
 | `(workouts)/[planId]` | Faixa, dias, tags, meta, ordem, acrescentar e remover |
-| `(workouts)/[planId]/days/[dayId]` | Seletor: busca, filtro de grupo, "Sugeridos" / "Outros" quando couber |
+| `(workouts)/[planId]/days/[dayId]` | Lista do dia com meta, e seletor com marca múltipla, busca, filtro de grupo e "Sugeridos" / "Outros" quando couber |
 
 O layout atual força `headerLargeTitle` em todas. A lista mantém o título grande "Treinos". As rotas empurradas usam título normal: "Modelo", o nome do plano, e "Exercícios".
 
@@ -139,7 +139,7 @@ Início e Dashboard não são alterados.
 ## Risks / Trade-offs
 
 - [Doze cores não são todas distinguíveis para daltonismo] → O nome do grupo está na tag. A cor só reforça.
-- [Pull não sugere Ombros, então o deltoide posterior não sobe sozinho] → A taxonomia não separa o ombro em dois grupos. Ombros fica no push; o usuário acrescenta a tag no pull se quiser. O seletor não esconde o exercício.
+- [Pull não sugere Ombros, então o deltoide posterior não sobe sozinho] → A taxonomia não separa o ombro em dois grupos. Ombros fica na ênfase do push. A tag do card só aparece se o exercício alocado recruta Ombros em 4 ou 5. O seletor não esconde o exercício.
 - [Um treino por dia da semana impede dois treinos no mesmo dia] → Limite da spec. Sete é o teto.
 - [Índice de um ativo não resolve dois aparelhos] → Aceito até `cloud-sync`. O dono local evita `owner_id` nulo, que no catálogo significa "dado de referência, não sincroniza".
 - [Meta opcional deixa o dia sem números] → `session-logging` trata meta ausente quando for registrar. A coluna já existe.
@@ -154,5 +154,5 @@ Promover para `docs/architecture.md`:
 
 - Os nove modelos e a classificação: programa nomeado (Arnold, PHUL, PHAT, PPLUL, bro split) não é modelo; bro split é a ênfase inicial do ABCDE.
 - `WorkoutDay` guarda o dia da semana (segunda = 1 … domingo = 7). No máximo um dia de treino por dia da semana. Descanso é a ausência de dia. Dias repetidos do modelo são registros independentes.
-- Ênfase do dia é sugestão de grupos (agonista 4 ou 5) ou o modo corpo inteiro. Não restringe o catálogo. A sugestão do próximo treino continua em aberto e pode usar weekday ou a ordem, em `session-logging`.
+- Ênfase do dia é sugestão de grupos (agonista 4 ou 5) ou o modo corpo inteiro, e só ordena o seletor. As tags do card saem dos exercícios alocados. Não restringe o catálogo. A sugestão do próximo treino continua em aberto e pode usar weekday ou a ordem, em `session-logging`. A meta do exercício planejado inclui peso em kg.
 - Identidade local: uma linha `local_owner`, UUID gerado no aparelho, fora do sync, até a conta existir.

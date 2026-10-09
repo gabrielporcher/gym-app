@@ -7,17 +7,17 @@ O catálogo de exercícios já pode ser consultado, mas o usuário ainda não te
 ## What Changes
 
 - O usuário cria o próprio plano de treino na seção Treinos, escolhendo um modelo de divisão e, em seguida, alocando exercícios a cada dia de treino.
-- Nove modelos, classificados pela quantidade de papéis na semana (ver abaixo). Cada um nasce com dias, nomes, ênfase muscular e uma semana sugerida. O usuário acrescenta ou remove dias, move um dia para um dia da semana que estava em descanso e troca a ênfase.
+- Nove modelos, classificados pela quantidade de papéis na semana (ver abaixo). Cada um nasce com dias, nomes, ênfase muscular e uma semana sugerida. O usuário acrescenta ou remove dias e move um dia para um dia da semana que estava em descanso. A ênfase ordena o seletor; o card não pede para acrescentar grupo.
 - A repetição (ABC 2x, Push Pull Legs 2x, os dois superiores do upper/lower) cria dias independentes: o segundo começa com a mesma ênfase e pode receber outros exercícios.
-- No dia, a ênfase aparece como tags com o nome do grupo muscular e uma cor estável daquele grupo. O seletor de exercícios continua o catálogo inteiro: o que combina com a ênfase vem primeiro; o resto continua escolhível.
-- Cada exercício planejado tem ordem e uma meta opcional de séries e faixa de repetições.
+- No card, a tag aparece depois que o exercício é alocado, com o nome do grupo agonista (nota 4 ou 5) e uma cor estável. O seletor continua o catálogo inteiro: o que combina com a ênfase vem primeiro; o resto continua escolhível. A escolha é múltipla e só grava ao confirmar.
+- Cada exercício planejado tem ordem e uma meta opcional de séries, faixa de repetições e peso em kg.
 - Só um plano fica ativo. Criar ou reativar outro arquiva o ativo, depois de confirmação. Plano arquivado pode ser reativado ou excluído. Excluir é soft delete.
 - **BREAKING** A seção Treinos deixa de ser só "Nada por aqui ainda." quando não há plano, e passa a mostrar o plano quando existe. Início e Dashboard continuam sem plano, sessão ou métrica.
 - **BREAKING** O armazenamento local passa a poder gravar plano de treino. Sessão e métrica continuam ausentes.
 
 ### Classificação dos modelos
 
-O modelo é a divisão da semana, não um programa com séries prontas. Programas nomeados (PHUL, PHAT, Arnold, PPLUL, StrongLifts) cabem num modelo abaixo, renomeando dias e ajustando as tags. Não viram cards próprios.
+O modelo é a divisão da semana, não um programa com séries prontas. Programas nomeados (PHUL, PHAT, Arnold, PPLUL, StrongLifts) cabem num modelo abaixo, renomeando dias e ajustando a ênfase. Não viram cards próprios.
 
 | Família | Cards nesta change | Semana inicial | Por que este corte |
 |---|---|---|---|
@@ -62,7 +62,7 @@ Premissas desta lista: no máximo um treino por dia da semana (dois treinos no m
 - Registrar sessão, sugerir o próximo treino e decidir se essa sugestão segue a ordem dos dias ou o calendário. Os dias guardam o dia da semana; a regra da sugestão continua em `session-logging`.
 - Dashboard, séries por músculo e qualquer métrica.
 - Coach ou admin atribuindo plano a outra pessoa. O plano já nasce com dono, e só.
-- Exercício criado pelo usuário, supersérie, RPE, RIR, descanso entre séries e meta de carga.
+- Exercício criado pelo usuário, supersérie, RPE, RIR e descanso entre séries.
 - Dois treinos no mesmo dia da semana.
 - Mapa corporal ilustrado. A ajuda visual desta change é a faixa da semana mais a tag com nome e cor.
 - Cards próprios para Arnold, PHUL, PHAT, PPLUL, bro split, push/pull sem pernas, torso/membros e anterior/posterior.
@@ -73,4 +73,4 @@ Premissas desta lista: no máximo um treino por dia da semana (dois treinos no m
 - Um coach atribui um plano a um usuário, reusando as mesmas tabelas.
 - Presets de ênfase para Arnold e PHUL, se a edição manual se mostrar insuficiente.
 - Mapa corporal, se as tags não bastarem para achar o exercício.
-- Dois treinos no mesmo dia, supersérie e metas de carga, RPE ou descanso.
+- Dois treinos no mesmo dia, supersérie, RPE ou descanso.
