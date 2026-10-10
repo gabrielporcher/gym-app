@@ -122,7 +122,7 @@ Peitoral médio e peitoral inferior são um músculo só. Vasto lateral, medial 
 
 O filtro por grupo inclui o exercício quando algum músculo daquele grupo está em 4 ou 5. A separação dos totais do período entre agonista e sinergista continua em `training-dashboard`.
 
-Equipamento (Barra, Barra W, Halteres, Máquina, Cabo, Peso corporal, Smith, Barra hexagonal) é o filtro. Tipo de carga (barra, halter, máquina, peso corporal, cabo) fica guardado para `session-logging`. Barra W, Smith e barra hexagonal usam carga barra. A convenção de qual kg registrar continua em aberto.
+Equipamento (Barra, Barra W, Halteres, Máquina, Cabo, Peso corporal, Smith, Barra hexagonal) é o filtro. Tipo de carga (barra, halter, máquina, peso corporal, cabo) define a carga aceita na série. Barra W, Smith e barra hexagonal usam carga barra. A carga registrada é o número digitado em kg, o mesmo significado da meta do plano: halter é um halter, peso corporal é a carga adicional e aceita zero, e o app não soma a barra nem duplica o halter.
 
 ## Estratégia de dados
 
@@ -131,7 +131,16 @@ Equipamento (Barra, Barra W, Halteres, Máquina, Cabo, Peso corporal, Smith, Bar
 - Tabelas de dado do usuário têm `owner_id`, `created_at`, `updated_at` e `deleted_at` (soft delete).
 - Grupos, músculos, nomes alternativos e recrutamentos da base não têm `owner_id`: são dado de referência e não sincronizam por usuário. `exercises.owner_id` existe e fica nulo na base.
 - Sessões guardam o que foi realmente executado e não dependem do estado atual do plano.
-- Pesos em kg.
+  A sugestão do próximo treino segue a sequência dos dias, do menor weekday ao maior, e recomeça
+  na segunda 00:00 no horário do aparelho. O weekday ordena os dias do plano; não casa o dia do
+  calendário com o weekday do treino.
+- A lista da sessão nasce dos exercícios daquele dia e pode perder ou ganhar um exercício do
+  catálogo. O catálogo completo abre para acrescentar, não como lista do treino. A troca guiada
+  continua fora.
+- Há no máximo uma sessão em andamento por vez. Nome do dia e meta são copiados ao começar;
+  editar o plano depois não reescreve essa sessão.
+- Pesos em kg. A série grava o número digitado: halter é um halter, peso corporal é carga
+  adicional e aceita zero, e o app não soma a barra nem duplica o halter.
 - Sync futuro (change `cloud-sync`): fila local de alterações pendentes, resolução de conflito
   last-write-wins por `updated_at`, autenticação via Supabase Auth, RLS por `owner_id`. Linha de
   exercício com `owner_id` nulo não sobe.
@@ -147,8 +156,9 @@ Equipamento (Barra, Barra W, Halteres, Máquina, Cabo, Peso corporal, Smith, Bar
 - Espaçamento `xs`/`sm`/`md`/`lg` (4/8/16/24). Tipografia com os nomes dos estilos do HIG,
   no tamanho Large padrão, com `allowFontScaling` do sistema.
 - A barra tem três seções: Início, Treinos e Dashboard. O catálogo de exercícios não é seção
-  raiz. A lista completa entra na criação do plano e, depois, na troca de um exercício durante
-  a sessão. No registro da sessão, a lista é só a dos exercícios alocados naquele treino.
+  raiz. A lista completa entra na criação do plano. No registro, a lista da sessão nasce dos
+  exercícios daquele dia e pode perder ou ganhar um exercício do catálogo. O catálogo completo
+  abre para acrescentar, não como lista do treino. A troca guiada de exercício continua fora.
 
 ## Roadmap de changes
 
@@ -165,8 +175,6 @@ Depois: insights baseados em regras, papel de admin/coach, RPE/RIR, unidades em 
 
 Resolver nas specs da change correspondente:
 
-- Sugestão do próximo treino: por sequência (com reinício semanal) ou por calendário? O weekday fica gravado no dia; a regra da sugestão continua em aberto. (`session-logging`)
-- Convenção de qual kg registrar por tipo de carga: barra, halter, máquina, peso corporal, cabo. (`session-logging`)
 - Recrutamento calculado na hora ou copiado para a sessão? (`training-dashboard`)
 - Os totais do período separam séries como agonista e como sinergista? (`training-dashboard`)
 
@@ -188,3 +196,4 @@ Resolver nas specs da change correspondente:
 | 2026-10-09 | Catálogo da base é dado de referência: doze grupos, recrutamento 5/4/1–3 com filtro de grupo em 4 ou 5, UUID fixo e `owner_id` nulo, equipamento separado do tipo de carga | A consulta e o dashboard futuro usam o mesmo recorte; correção entra em migration nova e a base não sobe no sync |
 | 2026-10-09 | Nove modelos de divisão; programa nomeado não é modelo; `WorkoutDay` guarda weekday 1–7 com no máximo um treino por dia; dias repetidos são independentes; ênfase é sugestão; `local_owner` fica fora do sync | A semana visível e o sync futuro usam o mesmo plano, sem card para Arnold, PHUL, PHAT ou PPLUL |
 | 2026-10-09 | Tags do card saem dos exercícios alocados (agonista 4 ou 5); a ênfase do modelo só ordena o seletor; a meta do exercício planejado inclui peso em kg | O card não pede grupo muscular antes do exercício, e a carga planejada fica junto da faixa de séries |
+| 2026-10-09 | Sugestão por sequência, com reinício na segunda 00:00 local; a carga registrada é o kg digitado; a sessão copia o dia e pode perder ou ganhar exercício; uma sessão em andamento, independente do plano depois da cópia | O weekday ordena os dias e não casa com o calendário; o dashboard futuro lê a série, não a meta |

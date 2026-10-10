@@ -19,6 +19,7 @@ type ExerciseSelectorProps = {
   text: string;
   muscleGroup?: string;
   selectedIds: readonly string[];
+  mode?: 'multiple' | 'single';
   onChangeText: (value: string) => void;
   onChangeMuscleGroup: (value: string | undefined) => void;
   onToggle: (exerciseId: string) => void;
@@ -57,6 +58,7 @@ export function ExerciseSelector({
   text,
   muscleGroup,
   selectedIds,
+  mode = 'multiple',
   onChangeText,
   onChangeMuscleGroup,
   onToggle,
@@ -67,7 +69,7 @@ export function ExerciseSelector({
   const insets = useSafeAreaInsets();
   const data = rowsOf(list);
   const selected = new Set(selectedIds);
-  const canConfirm = selectedIds.length > 0;
+  const canConfirm = mode === 'single' ? selectedIds.length === 1 : selectedIds.length > 0;
   const fabClearance = insets.bottom + Spacing.md + TouchTarget.min + Spacing.lg;
 
   return (
@@ -80,9 +82,13 @@ export function ExerciseSelector({
         keyboardShouldPersistTaps="handled"
         ListHeaderComponent={
           <View style={styles.header}>
-            <Text variant="headline">Selecione um ou mais exercícios</Text>
+            <Text variant="headline">
+              {mode === 'single' ? 'Selecione um exercício' : 'Selecione um ou mais exercícios'}
+            </Text>
             <Text variant="subheadline" color="secondaryLabel">
-              Toque para marcar. Você pode escolher vários antes de confirmar.
+              {mode === 'single'
+                ? 'Toque para marcar. Confirmar acrescenta esse exercício.'
+                : 'Toque para marcar. Você pode escolher vários antes de confirmar.'}
             </Text>
             <Text>{selectionLabel(selectedIds.length)}</Text>
             <Input

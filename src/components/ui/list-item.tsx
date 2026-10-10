@@ -1,24 +1,32 @@
 import { Pressable, StyleSheet, useColorScheme, View } from 'react-native';
 
 import { Text } from '@/components/ui/text';
-import { Colors, resolveScheme, Spacing, TouchTarget } from '@/constants/theme';
+import { Colors, resolveScheme, Spacing, TouchTarget, type ColorName } from '@/constants/theme';
 
 type ListItemProps = {
   title: string;
   subtitle?: string;
+  titleColor?: ColorName;
   showChevron?: boolean;
   selected?: boolean;
   onPress?: () => void;
 };
 
-export function ListItem({ title, subtitle, showChevron = false, selected = false, onPress }: ListItemProps) {
+export function ListItem({
+  title,
+  subtitle,
+  titleColor,
+  showChevron = false,
+  selected = false,
+  onPress,
+}: ListItemProps) {
   const colors = Colors[resolveScheme(useColorScheme())];
-  const titleColor = selected ? 'onTint' : 'label';
+  const resolvedTitleColor = selected ? 'onTint' : (titleColor ?? 'label');
   const subtitleColor = selected ? 'onTint' : 'secondaryLabel';
   const content = (
     <>
       <View style={styles.copy}>
-        <Text color={titleColor}>{title}</Text>
+        <Text color={resolvedTitleColor}>{title}</Text>
         {subtitle ? (
           <Text variant="subheadline" color={subtitleColor}>
             {subtitle}
